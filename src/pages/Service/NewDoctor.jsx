@@ -1,79 +1,37 @@
 import React, { useState } from "react";
 import {
-  FaBaby,
-  FaClock,
-  FaVenusMars,
-  FaWeight,
-  FaUser,
+  FaUserMd,
   FaPhone,
+  FaIdCard,
+  FaGraduationCap,
+  FaBriefcase,
+  FaArrowLeft,
 } from "react-icons/fa";
-import { FaArrowLeft } from "react-icons/fa6";
 import BackButton from "../../components/BackButton/BackButton";
 
-const BirthRegister = () => {
+const NewDoctor = () => {
   const [formData, setFormData] = useState({
-    birthDate: "",
-    birthTime: "",
-    babySex: "",
-    babyWeight: "",
-    fatherName: "",
-    motherName: "",
+    name: "",
     mobile: "",
-    deliveryType: "",
-    birthPlace: "",
-    attendantName: "",
+    regNo: "",
+    qualification: "",
+    designation: "",
+    department: "",
+    specialization: "",
+    status: "Active",
   });
 
   const formFields = [
     {
-      section: "Baby Details",
-      icon: <FaBaby className="text-blue-500" />,
+      section: "Doctor Information",
+      icon: <FaUserMd className="text-blue-500" />,
       fields: [
         {
-          label: "Birth Date",
-          type: "date",
-          name: "birthDate",
-          placeholder: "Select birth date",
-        },
-        {
-          label: "Birth Time",
-          type: "time",
-          name: "birthTime",
-          placeholder: "Select birth time",
-          icon: <FaClock className="text-gray-400" />,
-        },
-        {
-          label: "Baby's Sex",
-          type: "select",
-          name: "babySex",
-          placeholder: "Select baby's sex",
-          options: ["Male", "Female"],
-        },
-        {
-          label: "Baby's Weight (kg)",
-          type: "number",
-          name: "babyWeight",
-          placeholder: "Enter baby's weight",
-          step: "0.01",
-          icon: <FaWeight className="text-gray-400" />,
-        },
-      ],
-    },
-    {
-      section: "Parent Information",
-      icon: <FaUser className="text-blue-500" />,
-      fields: [
-        {
-          label: "Father's Name",
+          label: "Full Name",
           type: "text",
-          name: "fatherName",
-          placeholder: "Enter father's full name",
-        },
-        {
-          label: "Mother's Name",
-          type: "text",
-          name: "motherName",
-          placeholder: "Enter mother's full name",
+          name: "name",
+          placeholder: "Enter doctor's full name",
+          icon: <FaUserMd className="text-gray-400" />,
         },
         {
           label: "Mobile Number",
@@ -82,31 +40,58 @@ const BirthRegister = () => {
           placeholder: "Enter mobile number",
           icon: <FaPhone className="text-gray-400" />,
         },
+        {
+          label: "Registration No",
+          type: "text",
+          name: "regNo",
+          placeholder: "Enter registration number",
+          icon: <FaIdCard className="text-gray-400" />,
+        },
+        {
+          label: "Qualification",
+          type: "text",
+          name: "qualification",
+          placeholder: "Enter qualification",
+          icon: <FaGraduationCap className="text-gray-400" />,
+        },
       ],
     },
     {
-      section: "Birth Information",
-      icon: <FaBaby className="text-blue-500" />,
+      section: "Professional Details",
+      icon: <FaBriefcase className="text-blue-500" />,
       fields: [
         {
-          label: "Type of Delivery",
-          type: "select",
-          name: "deliveryType",
-          placeholder: "Select delivery type",
-          options: ["Normal", "Cesarean", "Forceps", "Vacuum"],
-        },
-        {
-          label: "Place of Birth",
-          type: "select",
-          name: "birthPlace",
-          placeholder: "Select birth place",
-          options: ["Hospital", "Home", "Clinic", "Other"],
-        },
-        {
-          label: "Attendant's Name",
+          label: "Designation",
           type: "text",
-          name: "attendantName",
-          placeholder: "Enter attendant's name",
+          name: "designation",
+          placeholder: "Enter designation",
+          icon: <FaBriefcase className="text-gray-400" />,
+        },
+        {
+          label: "Department",
+          type: "select",
+          name: "department",
+          placeholder: "Select department",
+          options: [
+            "Cardiology",
+            "Neurology",
+            "Pediatrics",
+            "Orthopedics",
+            "General Medicine",
+          ],
+        },
+        {
+          label: "Specialization",
+          type: "text",
+          name: "specialization",
+          placeholder: "Enter specialization",
+        },
+        {
+          label: "Status",
+          type: "select",
+          name: "status",
+          placeholder: "Select status",
+          options: ["Active", "Inactive", "On Leave"],
         },
       ],
     },
@@ -127,22 +112,21 @@ const BirthRegister = () => {
   };
 
   return (
-    <div className=" mx-auto">
-     
-     <div className="mb-8">
-  <div className="flex items-center">
-   <BackButton/>
-    <div>
-      <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-        <FaBaby className="mr-2 text-pink-500" />
-        Baby Birth Registration
-      </h2>
-      <p className="text-gray-600 mt-1">
-        Please enter all required details for birth registration
-      </p>
-    </div>
-  </div>
-</div>
+    <div className="mx-auto">
+      <div className="mb-8">
+        <div className="flex items-center">
+          <BackButton />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+              <FaUserMd className="mr-2 text-blue-500" />
+              Add New Doctor
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Please enter all required details for the new doctor
+            </p>
+          </div>
+        </div>
+      </div>
 
       <form
         onSubmit={handleSubmit}
@@ -209,7 +193,6 @@ const BirthRegister = () => {
                         value={formData[field.name]}
                         onChange={handleChange}
                         placeholder={field.placeholder}
-                        step={field.step}
                         className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
                           field.icon ? "pl-10" : ""
                         }`}
@@ -229,12 +212,17 @@ const BirthRegister = () => {
         ))}
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-        
+          <button
+            type="button"
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 mr-3"
+          >
+            Cancel
+          </button>
           <button
             type="submit"
-            className="btn-primary"
+            className="px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            Register Birth
+            Add Doctor
           </button>
         </div>
       </form>
@@ -242,4 +230,4 @@ const BirthRegister = () => {
   );
 };
 
-export default BirthRegister;
+export default NewDoctor;

@@ -21,7 +21,7 @@ export const dummyPatients = [
     literacy: "Graduate",
     occupation: "Teacher",
     doctorName: "Dr. Sharma",
-    delivery: false
+    delivery: false,
   },
   {
     admissionDate: "13-04-2025",
@@ -45,7 +45,7 @@ export const dummyPatients = [
     literacy: "Postgraduate",
     occupation: "Engineer",
     doctorName: "Dr. Patel",
-    delivery: true
+    delivery: true,
   },
   {
     admissionDate: "14-04-2025",
@@ -69,7 +69,7 @@ export const dummyPatients = [
     literacy: "High School",
     occupation: "Farmer",
     doctorName: "Dr. Khan",
-    delivery: false
+    delivery: false,
   },
   {
     admissionDate: "15-04-2025",
@@ -93,7 +93,7 @@ export const dummyPatients = [
     literacy: "Graduate",
     occupation: "Nurse",
     doctorName: "Dr. Verma",
-    delivery: true
+    delivery: true,
   },
   {
     admissionDate: "16-04-2025",
@@ -117,7 +117,7 @@ export const dummyPatients = [
     literacy: "Diploma",
     occupation: "Mechanic",
     doctorName: "Dr. Roy",
-    delivery: false
+    delivery: false,
   },
   {
     admissionDate: "17-04-2025",
@@ -141,7 +141,7 @@ export const dummyPatients = [
     literacy: "Graduate",
     occupation: "Housewife",
     doctorName: "Dr. Chatterjee",
-    delivery: true
+    delivery: true,
   },
   {
     admissionDate: "18-04-2025",
@@ -165,7 +165,7 @@ export const dummyPatients = [
     literacy: "Graduate",
     occupation: "Manager",
     doctorName: "Dr. Aggarwal",
-    delivery: false
+    delivery: false,
   },
   {
     admissionDate: "19-04-2025",
@@ -189,7 +189,7 @@ export const dummyPatients = [
     literacy: "Graduate",
     occupation: "Student",
     doctorName: "Dr. Joshi",
-    delivery: false
+    delivery: false,
   },
   {
     admissionDate: "20-04-2025",
@@ -213,7 +213,7 @@ export const dummyPatients = [
     literacy: "Literate",
     occupation: "Retired",
     doctorName: "Dr. Rao",
-    delivery: false
+    delivery: false,
   },
   {
     admissionDate: "21-04-2025",
@@ -237,10 +237,9 @@ export const dummyPatients = [
     literacy: "Postgraduate",
     occupation: "Teacher",
     doctorName: "Dr. Bhatia",
-    delivery: true
-  }
+    delivery: true,
+  },
 ];
-
 
 //////////////////////////
 
@@ -306,7 +305,6 @@ export const birthData = [
     attendantName: "Dr. Bose",
   },
 ];
-
 
 ////////////////////////
 
@@ -410,5 +408,514 @@ export const patientData = [
     address: "Camp, Pune",
     aadhaar: "0123 4567 8901",
     medicalHistory: "Hypertension",
+  },
+];
+
+//////////////////////////////////////
+
+export const departmentData = [
+  {
+    departmentName: "Cardiology",
+    departmentHead: "Dr. John Smith",
+    contactNumber: "9876543210",
+    email: "cardio@hospital.com",
+    location: "Block A - 1st Floor",
+    description: "Handles heart and blood vessel disorders.",
+    status: "Active",
+  },
+  {
+    departmentName: "Neurology",
+    departmentHead: "Dr. Alice Ray",
+    contactNumber: "9123456780",
+    email: "neuro@hospital.com",
+    location: "Block B - 2nd Floor",
+    description: "Manages neurological disorders and stroke patients.",
+    status: "Inactive",
+  },
+  {
+    departmentName: "Orthopedics",
+    departmentHead: "Dr. Rahul Mehta",
+    contactNumber: "9012345678",
+    email: "ortho@hospital.com",
+    location: "Block C - Ground Floor",
+    description: "Specializes in bone and joint treatments.",
+    status: "Active",
+  },
+  {
+    departmentName: "Pediatrics",
+    departmentHead: "Dr. Nisha Patel",
+    contactNumber: "9988776655",
+    email: "pediatrics@hospital.com",
+    location: "Block D - 3rd Floor",
+    description: "Focused on children's health and wellness.",
+    status: "Active",
+  },
+  {
+    departmentName: "Oncology",
+    departmentHead: "Dr. Kavita Sharma",
+    contactNumber: "9345612789",
+    email: "oncology@hospital.com",
+    location: "Block E - 2nd Floor",
+    description: "Provides treatment for various types of cancer.",
+    status: "Inactive",
+  },
+];
+
+///////////////////////////////////
+
+export const bedData = [
+  {
+    bedNumber: "B101",
+    wardNumber: "Ward 1",
+    status: "Active",
+    description: "Near window, good ventilation",
+  },
+  {
+    bedNumber: "B102",
+    wardNumber: "Ward 1",
+    status: "Inactive",
+    description: "Under maintenance",
+  },
+  {
+    bedNumber: "B201",
+    wardNumber: "Ward 2",
+    status: "Active",
+    description: "Close to nurse station",
+  },
+  {
+    bedNumber: "B202",
+    wardNumber: "Ward 2",
+    status: "Inactive",
+    description: "Damaged mattress",
+  },
+  {
+    bedNumber: "B301",
+    wardNumber: "Ward 3",
+    status: "Active",
+    description: "Isolation bed",
+  },
+];
+
+///////////////////////////
+
+export const allocatedBedData = [
+  {
+    wardNumber: "Ward A",
+    bedNumber: "B101",
+    bedType: "ICU",
+    patientName: "John Doe",
+    allocateDate: "2024-05-01",
+    dischargeDate: "2024-05-10",
+    status: "Occupied",
+  },
+  {
+    wardNumber: "Ward B",
+    bedNumber: "B102",
+    bedType: "General",
+    patientName: "Jane Smith",
+    allocateDate: "2024-05-03",
+    dischargeDate: "2024-05-12",
+    status: "Vacant",
+  },
+  {
+    wardNumber: "Ward A",
+    bedNumber: "B103",
+    bedType: "Semi-Private",
+    patientName: "Alice Brown",
+    allocateDate: "2024-05-05",
+    dischargeDate: "2024-05-14",
+    status: "Occupied",
+  },
+  {
+    wardNumber: "Ward C",
+    bedNumber: "B104",
+    bedType: "Private",
+    patientName: "Michael Green",
+    allocateDate: "2024-05-06",
+    dischargeDate: "2024-05-15",
+    status: "Vacant",
+  },
+  {
+    wardNumber: "Ward B",
+    bedNumber: "B105",
+    bedType: "ICU",
+    patientName: "Emily White",
+    allocateDate: "2024-05-07",
+    dischargeDate: "2024-05-16",
+    status: "Occupied",
+  },
+];
+
+/////////////////////////////////
+
+export const appointmentData = [
+  {
+    appointmentDate: "2025-05-25",
+    appointmentTime: "10:00 AM",
+    doctorName: "Dr. Arjun Patel",
+    department: "Cardiology",
+  },
+  {
+    appointmentDate: "2025-05-26",
+    appointmentTime: "02:30 PM",
+    doctorName: "Dr. Neha Sharma",
+    department: "Dermatology",
+  },
+  {
+    appointmentDate: "2025-05-27",
+    appointmentTime: "09:15 AM",
+    doctorName: "Dr. Vivek Kumar",
+    department: "Neurology",
+  },
+  {
+    appointmentDate: "2025-05-28",
+    appointmentTime: "11:45 AM",
+    doctorName: "Dr. Aisha Khan",
+    department: "Pediatrics",
+  },
+  {
+    appointmentDate: "2025-05-29",
+    appointmentTime: "04:00 PM",
+    doctorName: "Dr. Rohit Sen",
+    department: "Orthopedics",
+  },
+];
+
+////////////////////////////
+
+export const nurseData = [
+  {
+    name: "Anjali Mehta",
+    mobile: "9876543210",
+    regNo: "NR001",
+    address: "Andheri West, Mumbai",
+    department: "ICU",
+    shift: "Day",
+    status: "Active",
+  },
+  {
+    name: "Sonal Dubey",
+    mobile: "8123456789",
+    regNo: "NR002",
+    address: "JP Nagar, Bangalore",
+    department: "Emergency",
+    shift: "Night",
+    status: "On Leave",
+  },
+  {
+    name: "Nikita Rao",
+    mobile: "9012345678",
+    regNo: "NR003",
+    address: "Salt Lake, Kolkata",
+    department: "Pediatrics",
+    shift: "Rotating",
+    status: "Inactive",
+  },
+  {
+    name: "Preeti Sharma",
+    mobile: "8899776655",
+    regNo: "NR004",
+    address: "Gariahat, Kolkata",
+    department: "Surgery",
+    shift: "Day",
+    status: "Active",
+  },
+  {
+    name: "Ritu Bansal",
+    mobile: "9988771122",
+    regNo: "NR005",
+    address: "Lajpat Nagar, Delhi",
+    department: "General Ward",
+    shift: "Night",
+    status: "Active",
+  },
+];
+
+/////////////////////////////////////
+
+export const doctorData = [
+  {
+    name: "Dr. Rohan Mehra",
+    mobile: "9876543210",
+    regNo: "DOC001",
+    qualification: "MBBS, MD",
+    designation: "Consultant",
+    department: "Cardiology",
+    specialization: "Interventional Cardiology",
+    status: "Active",
+  },
+  {
+    name: "Dr. Sneha Kapoor",
+    mobile: "9123456789",
+    regNo: "DOC002",
+    qualification: "MBBS, MS",
+    designation: "Senior Surgeon",
+    department: "Surgery",
+    specialization: "Laparoscopic Surgery",
+    status: "On Leave",
+  },
+  {
+    name: "Dr. Arjun Verma",
+    mobile: "9988776655",
+    regNo: "DOC003",
+    qualification: "MBBS, MD",
+    designation: "Resident Doctor",
+    department: "Internal Medicine",
+    specialization: "General Medicine",
+    status: "Inactive",
+  },
+  {
+    name: "Dr. Meera Nair",
+    mobile: "8877665544",
+    regNo: "DOC004",
+    qualification: "MBBS, DNB",
+    designation: "Attending Physician",
+    department: "Neurology",
+    specialization: "Stroke Management",
+    status: "Active",
+  },
+  {
+    name: "Dr. Karan Joshi",
+    mobile: "9090909090",
+    regNo: "DOC005",
+    qualification: "MBBS, MS",
+    designation: "Orthopedic Surgeon",
+    department: "Orthopedics",
+    specialization: "Joint Replacement",
+    status: "Active",
+  },
+];
+
+////////////////////////////////
+
+export const pharmacistData = [
+  {
+    name: "Anita Sharma",
+    mobile: "9876543210",
+    regNo: "PHR001",
+    address: "Sector 12, Delhi",
+    department: "Pharmacy",
+    status: "Active",
+  },
+  {
+    name: "Ravi Menon",
+    mobile: "9123456789",
+    regNo: "PHR002",
+    address: "MG Road, Bangalore",
+    department: "Pharmacy",
+    status: "Inactive",
+  },
+  {
+    name: "Kiran Desai",
+    mobile: "9988776655",
+    regNo: "PHR003",
+    address: "Marine Drive, Mumbai",
+    department: "Pharmacy",
+    status: "On Leave",
+  },
+  {
+    name: "Sonal Gupta",
+    mobile: "8877665544",
+    regNo: "PHR004",
+    address: "Salt Lake, Kolkata",
+    department: "Pharmacy",
+    status: "Active",
+  },
+  {
+    name: "Deepak Raj",
+    mobile: "9090909090",
+    regNo: "PHR005",
+    address: "Gandhi Nagar, Chennai",
+    department: "Pharmacy",
+    status: "Active",
+  },
+];
+
+///////////////////////////////
+
+export const prescriptionData = [
+  {
+    prescriptionDate: "2024-12-01",
+    doctorName: "Dr. Ramesh Mehta",
+    patientName: "Sunita Sharma",
+  },
+  {
+    prescriptionDate: "2025-01-15",
+    doctorName: "Dr. Priya Deshmukh",
+    patientName: "Rahul Verma",
+  },
+  {
+    prescriptionDate: "2025-02-20",
+    doctorName: "Dr. Anil Kapoor",
+    patientName: "Meena Joshi",
+  },
+  {
+    prescriptionDate: "2025-03-10",
+    doctorName: "Dr. Neha Patil",
+    patientName: "Amit Gupta",
+  },
+  {
+    prescriptionDate: "2025-04-05",
+    doctorName: "Dr. Suresh Iyer",
+    patientName: "Kavita Bansal",
+  },
+];
+
+////////////////////////////
+
+export const billingData = [
+  {
+    billDate: "2025-05-22",
+    patientMobile: "9876543210",
+    patientName: "Ravi Kumar",
+    patientAddress: "Delhi, India",
+    referredDoctor: "Dr. Sharma",
+    testDate: "2025-05-21",
+    reportDate: "2025-05-22",
+    age: "45",
+    patientSex: "Male",
+    examDescription: "CT Scan - Chest",
+    department: "Radiology",
+    billAmount: "2500",
+    discount: "10",
+    netBillAmount: "2250",
+    doctorEarning: "500",
+    commissionPercent: "20",
+  },
+  {
+    billDate: "2025-05-20",
+    patientMobile: "9123456789",
+    patientName: "Pooja Mehta",
+    patientAddress: "Mumbai, India",
+    referredDoctor: "Dr. Desai",
+    testDate: "2025-05-19",
+    reportDate: "2025-05-20",
+    age: "30",
+    patientSex: "Female",
+    examDescription: "Ultrasound - Abdomen",
+    department: "Radiology",
+    billAmount: "1800",
+    discount: "5",
+    netBillAmount: "1710",
+    doctorEarning: "400",
+    commissionPercent: "22",
+  },
+  {
+    billDate: "2025-05-20",
+    patientMobile: "9123456789",
+    patientName: "Pooja Mehta",
+    patientAddress: "Mumbai, India",
+    referredDoctor: "Dr. Desai",
+    testDate: "2025-05-19",
+    reportDate: "2025-05-20",
+    age: "30",
+    patientSex: "Female",
+    examDescription: "Ultrasound - Abdomen",
+    department: "Radiology",
+    billAmount: "1800",
+    discount: "5",
+    netBillAmount: "1710",
+    doctorEarning: "400",
+    commissionPercent: "22",
+  },
+  {
+    billDate: "2025-05-20",
+    patientMobile: "9123456789",
+    patientName: "Pooja Mehta",
+    patientAddress: "Mumbai, India",
+    referredDoctor: "Dr. Desai",
+    testDate: "2025-05-19",
+    reportDate: "2025-05-20",
+    age: "30",
+    patientSex: "Female",
+    examDescription: "Ultrasound - Abdomen",
+    department: "Radiology",
+    billAmount: "1800",
+    discount: "5",
+    netBillAmount: "1710",
+    doctorEarning: "400",
+    commissionPercent: "22",
+  },
+  {
+    billDate: "2025-05-20",
+    patientMobile: "9123456789",
+    patientName: "Pooja Mehta",
+    patientAddress: "Mumbai, India",
+    referredDoctor: "Dr. Desai",
+    testDate: "2025-05-19",
+    reportDate: "2025-05-20",
+    age: "30",
+    patientSex: "Female",
+    examDescription: "Ultrasound - Abdomen",
+    department: "Radiology",
+    billAmount: "1800",
+    discount: "5",
+    netBillAmount: "1710",
+    doctorEarning: "400",
+    commissionPercent: "22",
+  },
+  {
+    billDate: "2025-05-20",
+    patientMobile: "9123456789",
+    patientName: "Pooja Mehta",
+    patientAddress: "Mumbai, India",
+    referredDoctor: "Dr. Desai",
+    testDate: "2025-05-19",
+    reportDate: "2025-05-20",
+    age: "30",
+    patientSex: "Female",
+    examDescription: "Ultrasound - Abdomen",
+    department: "Radiology",
+    billAmount: "1800",
+    discount: "5",
+    netBillAmount: "1710",
+    doctorEarning: "400",
+    commissionPercent: "22",
+  },
+];
+
+///////////////////////////////
+
+export const vehicleData = [
+  {
+    modelName: "Hyundai i20",
+    cardBrand: "Hyundai",
+    registerNo: "KA01AB1234",
+    driverName: "Ravi Kumar",
+    driverContact: "9876543210",
+    status: "Active",
+  },
+  {
+    modelName: "Tata Ace",
+    cardBrand: "Tata",
+    registerNo: "MH12XY3456",
+    driverName: "Sunil Patil",
+    driverContact: "9123456789",
+    status: "Under Maintenance",
+  },
+  {
+    modelName: "Maruti Swift",
+    cardBrand: "Maruti",
+    registerNo: "DL09LM4567",
+    driverName: "Amit Sharma",
+    driverContact: "9012345678",
+    status: "Inactive",
+  },
+
+  {
+    modelName: "Maruti Swift",
+    cardBrand: "Maruti",
+    registerNo: "DL09LM4567",
+    driverName: "Amit Sharma",
+    driverContact: "9012345678",
+    status: "Inactive",
+  },
+  {
+    modelName: "Maruti Swift",
+    cardBrand: "Maruti",
+    registerNo: "DL09LM4567",
+    driverName: "Amit Sharma",
+    driverContact: "9012345678",
+    status: "Inactive",
   },
 ];

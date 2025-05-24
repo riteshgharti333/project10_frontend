@@ -13,7 +13,59 @@ import {
   MdMedicalServices,
 } from "react-icons/md";
 import { FaRegSquarePlus } from "react-icons/fa6";
-import { LuBaby } from "react-icons/lu";
+import { LuAmbulance, LuBaby } from "react-icons/lu";
+import { LuHousePlus } from "react-icons/lu";
+import { MdSingleBed } from "react-icons/md";
+import { LuBedSingle } from "react-icons/lu";
+import { PiBedDuotone } from "react-icons/pi";
+import { MdOutlineEditCalendar } from "react-icons/md";
+import { LiaUserNurseSolid } from "react-icons/lia";
+import { FaStethoscope } from "react-icons/fa6";
+import { GiMedicines } from "react-icons/gi";
+import { BsPrescription2 } from "react-icons/bs";
+import { LuScanFace } from "react-icons/lu";
+import { RiSoundModuleFill } from "react-icons/ri";
+import { LuNewspaper } from "react-icons/lu";
+import { MdOutlineNoteAdd } from "react-icons/md";
+
+const ledgerTitles = [
+  {
+    title: "Patient Ledger",
+    link: "ledger/patient-ledger",
+  },
+  {
+    title: "Doctor Ledger",
+    link: "ledger/doctor-ledger",
+  },
+  {
+    title: "Supplier Ledger",
+    link: "ledger/supplier-ledger",
+  },
+  {
+    title: "Pharmacy Ledger",
+    link: "ledger/pharmacy-ledger",
+  },
+  {
+    title: "Lab/Diagnostics Ledger",
+    link: "ledger/lab-diagnostics-ledger",
+  },
+  {
+    title: "Cash Ledger",
+    link: "ledger/cash-ledger",
+  },
+  {
+    title: "Bank Ledger",
+    link: "ledger/bank-ledger",
+  },
+  {
+    title: "Insurance / TPA Ledger",
+    link: "ledger/insurance-tpa-ledger",
+  },
+  {
+    title: "General Expense Ledger",
+    link: "ledger/general-expense-ledger",
+  },
+];
 
 export const sidebarData = [
   {
@@ -36,22 +88,89 @@ export const sidebarData = [
     icon: FiUsers,
     link: "/patients-entries",
   },
+  {
+    title: "Departments",
+    icon: LuHousePlus,
+    link: "/departments",
+  },
+  {
+    title: "Bed Master",
+    icon: LuBedSingle,
+    link: "/bed-master",
+  },
+  {
+    title: "Bed Assign Management",
+    icon: PiBedDuotone,
+    link: "/bed-assign-management",
+  },
+  {
+    title: "Appointments",
+    icon: MdOutlineEditCalendar,
+    link: "/appointments",
+  },
+  {
+    title: "Nurse Register",
+    icon: LiaUserNurseSolid,
+    link: "/nurses",
+  },
+  {
+    title: "Doctor Register",
+    icon: FaStethoscope,
+    link: "/doctors",
+  },
+  {
+    title: "Pharmacist Register",
+    icon: GiMedicines,
+    link: "/pharmacists",
+  },
+  {
+    title: "Prescription Register",
+    icon: BsPrescription2,
+    link: "/prescriptions",
+  },
+  {
+    title: "Ambulance Management",
+    icon: LuAmbulance,
+    link: "/ambulances",
+  },
+  {
+    title: "Add Ledger",
+    icon: MdOutlineNoteAdd,
+    link: "/new-ledger",
+  },
+  {
+    title: "All Ledgers",
+    icon: LuNewspaper,
+    subItems: ledgerTitles.map((item) => ({
+      title: item.title,
+      link: `/${item.link}`,
+    })),
+  },
+  {
+    title: "X-Ray",
+    icon: LuScanFace,
+    subItems: [
+      { title: "X-Ray Entry", link: "/xray/new-xray" },
+      { title: "X-Ray Commision Report", link: "/xray/xray-commision-report" },
+    ],
+  },
+
   // {
-  //   title: "Patients",
-  //   icon: FiUsers,
+  //   title: "OPD Module",
+  //   icon: RiSoundModuleFill ,
   //   subItems: [
-  //     { title: "Registration", link: "/patients/registration" },
-  //     { title: "Records", link: "/patients/records" },
-  //     { title: "Appointments", link: "/patients/appointments" },
+  //     { title: "Diagnosis", link: "/" },
+  //     { title: "Medicine advice", link: "/" },
+  //     { title: "Tests advice", link: "/" },
   //   ],
   // },
-  // {
-  //   title: "Doctors",
-  //   icon: MdMedicalServices,
+  //  {
+  //   title: "IPD Module",
+  //   icon: RiSoundModuleFill ,
   //   subItems: [
-  //     { title: "Schedule", link: "/doctors/schedule" },
-  //     { title: "Specializations", link: "/doctors/specializations" },
-  //     { title: "Availability", link: "/doctors/availability" },
+  //     { title: "Patient IPD registration", link: "/xray/xray-commision-report" },
+  //     { title: "Bed management", link: "/xray/xray-commision-report" },
+  //     { title: "Patient's medicine details", link: "/xray/xray-commision-report" },
   //   ],
   // },
   // {

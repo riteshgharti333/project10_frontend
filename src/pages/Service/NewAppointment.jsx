@@ -1,112 +1,51 @@
 import React, { useState } from "react";
 import {
-  FaBaby,
-  FaClock,
-  FaVenusMars,
-  FaWeight,
-  FaUser,
-  FaPhone,
+  FaCalendarAlt,
+  FaUserMd,
+  FaBuilding,
+  FaArrowLeft,
 } from "react-icons/fa";
-import { FaArrowLeft } from "react-icons/fa6";
 import BackButton from "../../components/BackButton/BackButton";
 
-const BirthRegister = () => {
+const NewAppointment = () => {
   const [formData, setFormData] = useState({
-    birthDate: "",
-    birthTime: "",
-    babySex: "",
-    babyWeight: "",
-    fatherName: "",
-    motherName: "",
-    mobile: "",
-    deliveryType: "",
-    birthPlace: "",
-    attendantName: "",
+    appointmentDate: "",
+    doctorName: "",
+    department: "",
+    appointmentTime: "",
   });
 
   const formFields = [
     {
-      section: "Baby Details",
-      icon: <FaBaby className="text-blue-500" />,
+      section: "Appointment Information",
+      icon: <FaCalendarAlt className="text-blue-500" />,
       fields: [
         {
-          label: "Birth Date",
+          label: "Appointment Date",
           type: "date",
-          name: "birthDate",
-          placeholder: "Select birth date",
+          name: "appointmentDate",
+          placeholder: "Select appointment date",
+          icon: <FaCalendarAlt className="text-gray-400" />,
         },
         {
-          label: "Birth Time",
+          label: "Doctor Name",
+          type: "select",
+          name: "doctorName",
+          placeholder: "Select doctor",
+          options: ["Dr. Smith", "Dr. Johnson", "Dr. Williams", "Dr. Brown"],
+        },
+        {
+          label: "Department",
+          type: "select",
+          name: "department",
+          placeholder: "Select department",
+          options: ["Cardiology", "Neurology", "Pediatrics", "Orthopedics"],
+        },
+        {
+          label: "Appointment Time",
           type: "time",
-          name: "birthTime",
-          placeholder: "Select birth time",
-          icon: <FaClock className="text-gray-400" />,
-        },
-        {
-          label: "Baby's Sex",
-          type: "select",
-          name: "babySex",
-          placeholder: "Select baby's sex",
-          options: ["Male", "Female"],
-        },
-        {
-          label: "Baby's Weight (kg)",
-          type: "number",
-          name: "babyWeight",
-          placeholder: "Enter baby's weight",
-          step: "0.01",
-          icon: <FaWeight className="text-gray-400" />,
-        },
-      ],
-    },
-    {
-      section: "Parent Information",
-      icon: <FaUser className="text-blue-500" />,
-      fields: [
-        {
-          label: "Father's Name",
-          type: "text",
-          name: "fatherName",
-          placeholder: "Enter father's full name",
-        },
-        {
-          label: "Mother's Name",
-          type: "text",
-          name: "motherName",
-          placeholder: "Enter mother's full name",
-        },
-        {
-          label: "Mobile Number",
-          type: "tel",
-          name: "mobile",
-          placeholder: "Enter mobile number",
-          icon: <FaPhone className="text-gray-400" />,
-        },
-      ],
-    },
-    {
-      section: "Birth Information",
-      icon: <FaBaby className="text-blue-500" />,
-      fields: [
-        {
-          label: "Type of Delivery",
-          type: "select",
-          name: "deliveryType",
-          placeholder: "Select delivery type",
-          options: ["Normal", "Cesarean", "Forceps", "Vacuum"],
-        },
-        {
-          label: "Place of Birth",
-          type: "select",
-          name: "birthPlace",
-          placeholder: "Select birth place",
-          options: ["Hospital", "Home", "Clinic", "Other"],
-        },
-        {
-          label: "Attendant's Name",
-          type: "text",
-          name: "attendantName",
-          placeholder: "Enter attendant's name",
+          name: "appointmentTime",
+          placeholder: "Select appointment time",
         },
       ],
     },
@@ -127,22 +66,21 @@ const BirthRegister = () => {
   };
 
   return (
-    <div className=" mx-auto">
-     
-     <div className="mb-8">
-  <div className="flex items-center">
-   <BackButton/>
-    <div>
-      <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-        <FaBaby className="mr-2 text-pink-500" />
-        Baby Birth Registration
-      </h2>
-      <p className="text-gray-600 mt-1">
-        Please enter all required details for birth registration
-      </p>
-    </div>
-  </div>
-</div>
+    <div className="mx-auto">
+      <div className="mb-8">
+        <div className="flex items-center">
+          <BackButton />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+              <FaCalendarAlt className="mr-2 text-blue-500" />
+              New Appointment
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Please enter all required details for the appointment
+            </p>
+          </div>
+        </div>
+      </div>
 
       <form
         onSubmit={handleSubmit}
@@ -209,7 +147,6 @@ const BirthRegister = () => {
                         value={formData[field.name]}
                         onChange={handleChange}
                         placeholder={field.placeholder}
-                        step={field.step}
                         className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
                           field.icon ? "pl-10" : ""
                         }`}
@@ -229,12 +166,8 @@ const BirthRegister = () => {
         ))}
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-        
-          <button
-            type="submit"
-            className="btn-primary"
-          >
-            Register Birth
+          <button type="submit" className="btn-primary">
+            Schedule Appointment
           </button>
         </div>
       </form>
@@ -242,4 +175,4 @@ const BirthRegister = () => {
   );
 };
 
-export default BirthRegister;
+export default NewAppointment;

@@ -12,6 +12,7 @@ import {
   FaBriefcase,
   FaUserMd,
 } from "react-icons/fa";
+import BackButton from "../../components/BackButton/BackButton";
 
 const AdmissionEntry = () => {
   const [formData, setFormData] = useState({
@@ -234,13 +235,18 @@ const AdmissionEntry = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-          <FaProcedures className="mr-2 text-blue-600" />
-          Patient Admission Form
-        </h2>
-        <p className="text-gray-600 mt-1">
-          Please fill all required patient details
-        </p>
+        <div className="flex items-center">
+          <BackButton />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+              <FaProcedures className="mr-2 text-blue-600" />
+              Patient Admission Form
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Please fill all required patient details
+            </p>
+          </div>
+        </div>
       </div>
 
       <form
@@ -352,16 +358,7 @@ const AdmissionEntry = () => {
         ))}
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-          <button
-            type="button"
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 mr-3"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
+          <button type="submit" className="btn-primary">
             Submit Admission
           </button>
         </div>

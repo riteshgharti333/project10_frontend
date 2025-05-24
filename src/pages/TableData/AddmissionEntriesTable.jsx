@@ -26,7 +26,7 @@ const columns = useMemo(
     },
     {
       accessorKey: "regNo",
-      header: "Reg. No",
+      header: "Registration No.",
       cell: (info) => info.getValue(),
     },
     {

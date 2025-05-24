@@ -16,11 +16,28 @@ import {
   FiSearch,
 } from "react-icons/fi";
 
-const Table = ({ data, columns, path }) => {
+const Table = ({ data, columns, filters = {}, getRowProps }) => {
   const navigate = useNavigate();
 
+  const { doctor, fromDate, toDate } = filters;
+
+  // Filter logic
+  const filteredData = data.filter((row) => {
+    const testDate = new Date(row.testDate);
+    const from = fromDate ? new Date(fromDate) : null;
+    const to = toDate ? new Date(toDate) : null;
+
+    const matchDoctor =
+      !doctor || doctor === "All" || row.referredDoctor === doctor;
+
+    const matchFrom = from ? testDate >= from : true;
+    const matchTo = to ? testDate <= to : true;
+
+    return matchDoctor && matchFrom && matchTo;
+  });
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -38,7 +55,7 @@ const Table = ({ data, columns, path }) => {
   };
 
   return (
-    <div className="mt-5 max-w-[1050px] m-auto flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="mt-5 max-w-[1050px]  m-auto flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
       {/* Table Header with Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-b border-gray-200">
         <div className="relative w-full sm:w-64 mb-4 sm:mb-0">
@@ -105,10 +122,16 @@ const Table = ({ data, columns, path }) => {
               <tr
                 key={row.id}
                 onClick={() => handleRowClick(row.original._id)}
-                className="hover:bg-blue-50 cursor-pointer transition-colors duration-150"
+                {...(getRowProps ? getRowProps(row) : {})}
+                className={`hover:bg-blue-50 cursor-pointer transition-colors duration-150 ${
+                  getRowProps ? getRowProps(row)?.className || "" : ""
+                }`}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    key={cell.id}
+                    className="px-6 text-sm py-4 whitespace-nowrap"
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
