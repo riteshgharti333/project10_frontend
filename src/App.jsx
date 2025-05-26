@@ -38,6 +38,22 @@ import CashLedger from "./pages/LadgerTable/CashLedger";
 import BankLedger from "./pages/LadgerTable/BankLedger";
 import InsuranceTPALedger from "./pages/LadgerTable/InsuranceTPALedger";
 import GeneralExpenseLedger from "./pages/LadgerTable/GeneralExpenseLedger";
+import CreationTable from "./pages/TableData/CreationTable";
+import NewBrand from "./pages/Service/NewBrand";
+import ProductTable from "./pages/TableData/ProductTable";
+import NewProduct from "./pages/Service/NewProduct";
+import ProductEntryTable from "./pages/TableData/ProductEntryTable";
+import NewProductEntry from "./pages/Service/NewProductEntry";
+import AllProductTable from "./pages/TableData/AllProductTable";
+import ServiceChargesUpdate from "./pages/Service/ServiceChargesUpdate";
+import NewBillEntry from "./pages/Service/NewBillEntry";
+import NewMoneyReceiptEntry from "./pages/Service/NewMoneyReceiptEntry";
+import BillTable from "./pages/TableData/BillTable";
+import MoneyReceiptTable from "./pages/TableData/MoneyReceiptTable";
+import VoucharTable from "./pages/TableData/VoucharTable";
+import NewVouchar from "./pages/Service/NewVouchar";
+import EmployeeTable from "./pages/TableData/EmployeeTable";
+import NewEmployee from "./pages/Service/NewEmployee";
 
 function App() {
   return (
@@ -136,6 +152,42 @@ function App() {
               path="/ledger/general-expense-ledger"
               element={<GeneralExpenseLedger />}
             />
+
+            {/* Item Services */}
+            <Route path="/company-creation" element={<CreationTable />} />
+            <Route path="/new-company-creation" element={<NewBrand />} />
+            <Route path="/product-category" element={<ProductTable />} />
+            <Route path="/add-product-category" element={<NewProduct />} />
+            <Route path="/add-product" element={<ProductEntryTable />} />
+            <Route path="/new-product-entry" element={<NewProductEntry />} />
+            <Route path="/all-products" element={<AllProductTable />} />
+            <Route
+              path="/service-charges-update"
+              element={<ServiceChargesUpdate />}
+            />
+
+            {/* Transection */}
+            <Route path="/bills" element={<BillTable />} />
+            <Route path="/new-bill-entry" element={<NewBillEntry />} />
+            <Route path="/money-receipts" element={<MoneyReceiptTable />} />
+            <Route
+              path="/new-money-receipt-entry"
+              element={<NewMoneyReceiptEntry />}
+            />
+            <Route
+              path="/service-charges-update"
+              element={<ServiceChargesUpdate />}
+            />
+
+            <Route path="/payment-vouchars" element={<VoucharTable />} />
+            <Route path="/new-vouchar" element={<NewVouchar />} />
+
+            <Route path="/employees" element={<EmployeeTable />} />
+            <Route path="/new-employee" element={<NewEmployee />} />
+
+
+
+
           </Route>
         </Routes>
       </BrowserRouter>

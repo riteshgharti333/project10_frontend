@@ -27,6 +27,9 @@ import { LuScanFace } from "react-icons/lu";
 import { RiSoundModuleFill } from "react-icons/ri";
 import { LuNewspaper } from "react-icons/lu";
 import { MdOutlineNoteAdd } from "react-icons/md";
+import { LiaMoneyBillWaveSolid } from "react-icons/lia";
+import { MdOutlinePayments } from "react-icons/md";
+import { CgGirl } from "react-icons/cg";
 
 const ledgerTitles = [
   {
@@ -173,15 +176,17 @@ export const sidebarData = [
   //     { title: "Patient's medicine details", link: "/xray/xray-commision-report" },
   //   ],
   // },
-  // {
-  //   title: "Appointments",
-  //   icon: FiCalendar,
-  //   subItems: [
-  //     { title: "New Appointment", link: "/appointments/new" },
-  //     { title: "Calendar", link: "/appointments/calendar" },
-  //     { title: "Follow-ups", link: "/appointments/follow-ups" },
-  //   ],
-  // },
+  {
+    title: "Item / Service",
+    icon: FiCalendar,
+    subItems: [
+      { title: "Company Creation", link: "/company-creation" },
+      { title: "Product Category", link: "/product-category" },
+      { title: "Add Item / Service", link: "/add-product" },
+      { title: "View All Item / Service", link: "/all-products" },
+      { title: "Service Charges Update", link: "/service-charges-update" },
+    ],
+  },
   // {
   //   title: "Pharmacy",
   //   icon: MdMedication,
@@ -230,6 +235,35 @@ export const sidebarData = [
   // },
 ];
 
+export const sidebar2Data = [
+  {
+    title: "Billing",
+    icon: LiaMoneyBillWaveSolid,
+    subItems: [
+      { title: "Bill Entry", link: "/bills" },
+      { title: "Money Recepit Entry", link: "/money-receipts" },
+    ],
+  },
+  {
+    title: "Payment Vouchar",
+    icon: MdOutlinePayments,
+    link: "/payment-vouchars",
+  },
+    {
+    title: "User Module",
+    icon: FiUser,
+   subItems: [
+      { title: "Employee", link: "/employees" },
+    ],
+  },
+    {
+    title: "HR Management",
+    icon: CgGirl,
+   subItems: [
+      { title: "Sallery", link: "/service-charges-update" },
+    ],
+  },
+];
 ////////////////////////////
 
 import {
