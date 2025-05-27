@@ -74,7 +74,7 @@ const BankLedger = () => {
         </Link>
       </div>
 
-      <Table data={bankLedgerData} columns={columns} />
+      <Table data={bankLedgerData} columns={columns} path="bank-ledger" />
     </div>
   );
 };

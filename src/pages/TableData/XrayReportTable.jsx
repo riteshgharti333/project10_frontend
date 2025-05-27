@@ -138,7 +138,8 @@ const XrayReportTable = () => {
       </div>
 
       {/* Filters UI */}
-      <div className="my-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+           <div className="my-4 flex items-center gap-4">
+
         <select
           value={doctor}
           onChange={(e) => setDoctor(e.target.value)}
@@ -154,6 +155,8 @@ const XrayReportTable = () => {
           )}
         </select>
 
+        <p>From</p>
+
         <input
           type="date"
           value={fromDate}
@@ -161,12 +164,16 @@ const XrayReportTable = () => {
           className="border border-gray-300 rounded px-3 py-2"
         />
 
+        <p>To</p>
+
         <input
           type="date"
           value={toDate}
           onChange={(e) => setToDate(e.target.value)}
           className="border border-gray-300 rounded px-3 py-2"
         />
+
+        <button className="btn-primary w-fit">Submit</button>
       </div>
 
       <Table

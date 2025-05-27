@@ -73,7 +73,7 @@ const AmbulancesTable = () => {
         </Link>
       </div>
 
-      <Table data={vehicleData} columns={columns} />
+      <Table data={vehicleData} columns={columns} path="ambulance" />
     </div>
   );
 };

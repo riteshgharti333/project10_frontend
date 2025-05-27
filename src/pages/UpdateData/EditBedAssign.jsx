@@ -1,112 +1,75 @@
 import React, { useState } from "react";
-import {
-  FaBaby,
-  FaClock,
-  FaVenusMars,
-  FaWeight,
-  FaUser,
-  FaPhone,
-} from "react-icons/fa";
-import { FaArrowLeft } from "react-icons/fa6";
+import { FaBed, FaUser, FaCalendarAlt, FaArrowLeft } from "react-icons/fa";
 import BackButton from "../../components/BackButton/BackButton";
 
-const BirthRegister = () => {
+const EditBedAssign = () => {
   const [formData, setFormData] = useState({
-    birthDate: "",
-    birthTime: "",
-    babySex: "",
-    babyWeight: "",
-    fatherName: "",
-    motherName: "",
-    mobile: "",
-    deliveryType: "",
-    birthPlace: "",
-    attendantName: "",
+    wardNumber: "",
+    bedNumber: "",
+    bedType: "",
+    patientName: "",
+    allocateDate: "",
+    dischargeDate: "",
+    status: "Occupied",
   });
 
   const formFields = [
     {
-      section: "Baby Details",
-      icon: <FaBaby className="text-blue-500" />,
+      section: "Bed Information",
+      icon: <FaBed className="text-blue-500" />,
       fields: [
         {
-          label: "Birth Date",
-          type: "date",
-          name: "birthDate",
-          placeholder: "Select birth date",
+          label: "Ward No.",
+          type: "text",
+          name: "wardNumber",
+          placeholder: "Enter ward number",
         },
         {
-          label: "Birth Time",
-          type: "time",
-          name: "birthTime",
-          placeholder: "Select birth time",
-          icon: <FaClock className="text-gray-400" />,
+          label: "Bed No.",
+          type: "text",
+          name: "bedNumber",
+          placeholder: "Enter bed number",
         },
         {
-          label: "Baby's Sex",
+          label: "Bed Type",
           type: "select",
-          name: "babySex",
-          placeholder: "Select baby's sex",
-          options: ["Male", "Female"],
-        },
-        {
-          label: "Baby's Weight (kg)",
-          type: "number",
-          name: "babyWeight",
-          placeholder: "Enter baby's weight",
-          step: "0.01",
-          icon: <FaWeight className="text-gray-400" />,
+          name: "bedType",
+          placeholder: "Select bed type",
+          options: ["General", "ICU", "Private", "Semi-Private", "Pediatric"],
         },
       ],
     },
     {
-      section: "Parent Information",
+      section: "Patient Information",
       icon: <FaUser className="text-blue-500" />,
       fields: [
         {
-          label: "Father's Name",
+          label: "Patient Name",
           type: "text",
-          name: "fatherName",
-          placeholder: "Enter father's full name",
+          name: "patientName",
+          placeholder: "Enter patient name",
+          icon: <FaUser className="text-gray-400" />,
         },
         {
-          label: "Mother's Name",
-          type: "text",
-          name: "motherName",
-          placeholder: "Enter mother's full name",
+          label: "Allocate Date",
+          type: "date",
+          name: "allocateDate",
+          placeholder: "Select allocation date",
+          icon: <FaCalendarAlt className="text-gray-400" />,
         },
         {
-          label: "Mobile Number",
-          type: "tel",
-          name: "mobile",
-          placeholder: "Enter mobile number",
-          icon: <FaPhone className="text-gray-400" />,
+          label: "Discharge Date",
+          type: "date",
+          name: "dischargeDate",
+          placeholder: "Select discharge date",
+          icon: <FaCalendarAlt className="text-gray-400" />,
         },
-      ],
-    },
-    {
-      section: "Birth Information",
-      icon: <FaBaby className="text-blue-500" />,
-      fields: [
         {
-          label: "Type of Delivery",
+          label: "Status",
           type: "select",
-          name: "deliveryType",
-          placeholder: "Select delivery type",
-          options: ["Normal", "Cesarean", "Forceps", "Vacuum"],
-        },
-        {
-          label: "Place of Birth",
-          type: "select",
-          name: "birthPlace",
-          placeholder: "Select birth place",
-          options: ["Hospital", "Home", "Clinic", "Other"],
-        },
-        {
-          label: "Attendant's Name",
-          type: "text",
-          name: "attendantName",
-          placeholder: "Enter attendant's name",
+          name: "status",
+          placeholder: "Select bed status",
+          options: ["Occupied", "Reserved", "Maintenance"],
         },
       ],
     },
@@ -127,17 +90,17 @@ const BirthRegister = () => {
   };
 
   return (
-    <div className=" mx-auto">
+    <div className="mx-auto">
       <div className="mb-8">
         <div className="flex items-center">
           <BackButton />
           <div>
             <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-              <FaBaby className="mr-2 text-pink-500" />
-              Baby Birth Registration
+              <FaBed className="mr-2 text-blue-500" />
+              Assign Bed to Patient
             </h2>
             <p className="text-gray-600 mt-1">
-              Please enter all required details for birth registration
+              Please enter all required details for bed assignment
             </p>
           </div>
         </div>
@@ -208,7 +171,6 @@ const BirthRegister = () => {
                         value={formData[field.name]}
                         onChange={handleChange}
                         placeholder={field.placeholder}
-                        step={field.step}
                         className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
                           field.icon ? "pl-10" : ""
                         }`}
@@ -229,7 +191,7 @@ const BirthRegister = () => {
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
           <button type="submit" className="btn-primary">
-            Register Birth
+            Assign Bed
           </button>
         </div>
       </form>
@@ -237,4 +199,4 @@ const BirthRegister = () => {
   );
 };
 
-export default BirthRegister;
+export default EditBedAssign;

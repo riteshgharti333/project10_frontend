@@ -62,7 +62,7 @@ const PatientsEntriesTable = () => {
         </Link>
       </div>
 
-      <Table data={patientData} columns={columns} />
+      <Table data={patientData} columns={columns} path="patient" />
     </div>
   );
 };

@@ -98,7 +98,7 @@ const DoctorLedger = () => {
         </Link>
       </div>
 
-      <Table data={doctorLedgerData} columns={columns} />
+      <Table data={doctorLedgerData} columns={columns} path="doctor-ledger"/>
     </div>
   );
 };

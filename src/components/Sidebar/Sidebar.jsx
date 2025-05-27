@@ -1,6 +1,6 @@
-import { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import { sidebar2Data, sidebarData } from "../../assets/data";
+import { sidebar2Data, sidebar3Data, sidebarData } from "../../assets/data";
 
 import {
   FiLogOut,
@@ -11,7 +11,7 @@ import {
 } from "react-icons/fi";
 import { MdLocalHospital } from "react-icons/md";
 
-const Sidebar = () => {
+const Sidebar = React.memo(() => {
   const [collapsed, setCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState({});
   const [activeItem, setActiveItem] = useState(0);
@@ -23,20 +23,15 @@ const Sidebar = () => {
     }));
   };
 
-  const handleItemClick = (key) => {
-    setActiveItem(key);
-    if (
-      (key in sidebarData || key.startsWith("main-")) &&
-      sidebarData[parseInt(key.split("-")[1])].subItems
-    ) {
-      toggleExpand(key);
-    } else if (
-      (key in sidebar2Data || key.startsWith("tran-")) &&
-      sidebar2Data[parseInt(key.split("-")[1])].subItems
-    ) {
-      toggleExpand(key);
-    }
-  };
+ const handleItemClick = useCallback((key) => {
+  setActiveItem(key);
+  if (key.startsWith("main-") || key.startsWith("tran-")) {
+    setExpandedItems(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  }
+}, []);
 
   return (
     <div
@@ -122,12 +117,78 @@ const Sidebar = () => {
         <h1
           className={` ${
             collapsed ? "hidden" : "block"
-          } px-2 mb-3 text-[18px] font-bold text-blue-950`}
+          } px-2 mt-3 mb-3 text-[18px] font-bold text-blue-950`}
         >
           Transection
         </h1>
 
         {sidebar2Data.map((item, index) => {
+          const key = `tran-${index}`;
+          return (
+            <div key={key} className="mb-1">
+              <div
+                className={`flex items-center p-3 rounded-lg transition-all duration-200 cursor-pointer group
+          ${
+            activeItem === key
+              ? "bg-blue-50 text-blue-700"
+              : "text-gray-600 hover:bg-gray-50"
+          }
+          ${collapsed ? "justify-center" : "justify-between"}`}
+                onClick={() => handleItemClick(key)}
+              >
+                <div className="flex items-center">
+                  <Link
+                    to={item.link}
+                    className={`${
+                      activeItem === key ? "text-blue-600" : "text-gray-500"
+                    } group-hover:text-blue-500`}
+                  >
+                    <item.icon />
+                  </Link>
+                  {!collapsed && (
+                    <Link to={item.link} className="ml-3 text-sm font-medium">
+                      {item.title}
+                    </Link>
+                  )}
+                </div>
+                {!collapsed && item.subItems && (
+                  <span className="text-gray-400 text-xs">
+                    {expandedItems[key] ? (
+                      <FiChevronDown />
+                    ) : (
+                      <FiChevronRight />
+                    )}
+                  </span>
+                )}
+              </div>
+
+              {!collapsed && item.subItems && expandedItems[key] && (
+                <div className="ml-8 mt-1 space-y-1 animate-fadeIn">
+                  {item.subItems.map((subItem, subIndex) => (
+                    <Link
+                      to={subItem.link}
+                      key={subIndex}
+                      className="block p-2 pl-4 rounded-md text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-all duration-150"
+                    >
+                      {subItem.title}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+
+         <h1
+          className={` ${
+            collapsed ? "hidden" : "block"
+          } px-2 mt-3 mb-3 text-[18px] font-bold text-blue-950`}
+        >
+          Reports
+        </h1>
+
+        {sidebar3Data.map((item, index) => {
           const key = `tran-${index}`;
           return (
             <div key={key} className="mb-1">
@@ -226,6 +287,6 @@ const Sidebar = () => {
       </div>
     </div>
   );
-};
+});
 
 export default Sidebar;

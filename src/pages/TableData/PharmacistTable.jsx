@@ -73,7 +73,7 @@ const PharmacistTable = () => {
         </Link>
       </div>
 
-      <Table data={pharmacistData} columns={columns} />
+      <Table data={pharmacistData} columns={columns} path="pharmacist" />
     </div>
   );
 };

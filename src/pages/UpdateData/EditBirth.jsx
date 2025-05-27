@@ -10,7 +10,7 @@ import {
 import { FaArrowLeft } from "react-icons/fa6";
 import BackButton from "../../components/BackButton/BackButton";
 
-const BirthRegister = () => {
+const EditBirth = () => {
   const [formData, setFormData] = useState({
     birthDate: "",
     birthTime: "",
@@ -128,20 +128,21 @@ const BirthRegister = () => {
 
   return (
     <div className=" mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center">
-          <BackButton />
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-              <FaBaby className="mr-2 text-pink-500" />
-              Baby Birth Registration
-            </h2>
-            <p className="text-gray-600 mt-1">
-              Please enter all required details for birth registration
-            </p>
-          </div>
-        </div>
-      </div>
+     
+     <div className="mb-8">
+  <div className="flex items-center">
+   <BackButton/>
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+        <FaBaby className="mr-2 text-pink-500" />
+        Baby Birth Registration
+      </h2>
+      <p className="text-gray-600 mt-1">
+        Please enter all required details for birth registration
+      </p>
+    </div>
+  </div>
+</div>
 
       <form
         onSubmit={handleSubmit}
@@ -228,7 +229,11 @@ const BirthRegister = () => {
         ))}
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-          <button type="submit" className="btn-primary">
+        
+          <button
+            type="submit"
+            className="btn-primary"
+          >
             Register Birth
           </button>
         </div>
@@ -237,4 +242,4 @@ const BirthRegister = () => {
   );
 };
 
-export default BirthRegister;
+export default EditBirth

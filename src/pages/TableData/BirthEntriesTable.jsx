@@ -5,62 +5,60 @@ import Table from "../../components/Table/Table";
 import { birthData, dummyPatients } from "../../assets/tableData";
 
 const BirthEntriesTable = () => {
- 
   const columns = useMemo(
-  () => [
-    {
-      accessorKey: "birthDate",
-      header: "Birth Date",
-      cell: (info) => {
-        const date = new Date(info.getValue());
-        return isNaN(date)
-          ? info.getValue()
-          : date.toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            });
+    () => [
+      {
+        accessorKey: "birthDate",
+        header: "Birth Date",
+        cell: (info) => {
+          const date = new Date(info.getValue());
+          return isNaN(date)
+            ? info.getValue()
+            : date.toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              });
+        },
       },
-    },
-    {
-      accessorKey: "birthTime",
-      header: "Birth Time",
-      cell: (info) => info.getValue(),
-    },
-    {
-      accessorKey: "babySex",
-      header: "Sex",
-      cell: (info) => info.getValue(),
-    },
-    {
-      accessorKey: "babyWeight",
-      header: "Weight",
-      cell: (info) => `${info.getValue()} kg`,
-    },
-    {
-      accessorKey: "fatherName",
-      header: "Father's Name",
-      cell: (info) => info.getValue(),
-    },
-    {
-      accessorKey: "motherName",
-      header: "Mother's Name",
-      cell: (info) => info.getValue(),
-    },
-    {
-      accessorKey: "mobile",
-      header: "Mobile No.",
-      cell: (info) => info.getValue(),
-    },
-    {
-      accessorKey: "deliveryType",
-      header: "Delivery Type",
-      cell: (info) => info.getValue(),
-    },
-   
-  ],
-  []
-);
+      {
+        accessorKey: "birthTime",
+        header: "Birth Time",
+        cell: (info) => info.getValue(),
+      },
+      {
+        accessorKey: "babySex",
+        header: "Sex",
+        cell: (info) => info.getValue(),
+      },
+      {
+        accessorKey: "babyWeight",
+        header: "Weight",
+        cell: (info) => `${info.getValue()} kg`,
+      },
+      {
+        accessorKey: "fatherName",
+        header: "Father's Name",
+        cell: (info) => info.getValue(),
+      },
+      {
+        accessorKey: "motherName",
+        header: "Mother's Name",
+        cell: (info) => info.getValue(),
+      },
+      {
+        accessorKey: "mobile",
+        header: "Mobile No.",
+        cell: (info) => info.getValue(),
+      },
+      {
+        accessorKey: "deliveryType",
+        header: "Delivery Type",
+        cell: (info) => info.getValue(),
+      },
+    ],
+    []
+  );
 
   return (
     <div className="">
@@ -73,7 +71,7 @@ const BirthEntriesTable = () => {
         </Link>
       </div>
 
-      <Table data={birthData} columns={columns} />
+      <Table data={birthData} columns={columns} path="birth" />
     </div>
   );
 };

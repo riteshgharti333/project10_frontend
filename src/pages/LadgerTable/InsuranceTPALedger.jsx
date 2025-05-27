@@ -2,7 +2,12 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
-import { doctorLedgerData, generalLedgerData, insuranceLedgerData, patientLedgerData } from "../../assets/ledgerData";
+import {
+  doctorLedgerData,
+  generalLedgerData,
+  insuranceLedgerData,
+  patientLedgerData,
+} from "../../assets/ledgerData";
 
 const InsuranceTPALedger = () => {
   const columns = useMemo(
@@ -80,7 +85,11 @@ const InsuranceTPALedger = () => {
         </Link>
       </div>
 
-      <Table data={generalLedgerData} columns={columns} />
+      <Table
+        data={insuranceLedgerData}
+        columns={columns}
+        path="insurance-ledger"
+      />
     </div>
   );
 };

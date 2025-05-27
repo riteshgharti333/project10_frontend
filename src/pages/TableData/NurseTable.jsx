@@ -99,7 +99,7 @@ const NurseTable = () => {
         </Link>
       </div>
 
-      <Table data={nurseData} columns={columns} />
+      <Table data={nurseData} columns={columns} path="nurse"/>
     </div>
   );
 };

@@ -60,7 +60,7 @@ const CashLedger = () => {
         </Link>
       </div>
 
-      <Table data={cashLedgerData} columns={columns} />
+      <Table data={cashLedgerData} columns={columns} path="cash-ledger" />
     </div>
   );
 };

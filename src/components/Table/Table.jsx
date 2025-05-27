@@ -15,47 +15,67 @@ import {
   FiArrowDown,
   FiSearch,
 } from "react-icons/fi";
+import { useMemo } from "react";
 
-const Table = ({ data, columns, filters = {}, getRowProps }) => {
+const Table = ({ data, columns, filters = {}, getRowProps, path }) => {
   const navigate = useNavigate();
 
-  const { doctor, fromDate, toDate } = filters;
+  // Filter data using useMemo
+  const filteredData = useMemo(() => {
+    const { doctor, fromDate, toDate } = filters;
+    return data.filter((row) => {
+      const testDate = new Date(row.testDate);
+      const from = fromDate ? new Date(fromDate) : null;
+      const to = toDate ? new Date(toDate) : null;
 
-  // Filter logic
-  const filteredData = data.filter((row) => {
-    const testDate = new Date(row.testDate);
-    const from = fromDate ? new Date(fromDate) : null;
-    const to = toDate ? new Date(toDate) : null;
+      const matchDoctor =
+        !doctor || doctor === "All" || row.referredDoctor === doctor;
+      const matchFrom = from ? testDate >= from : true;
+      const matchTo = to ? testDate <= to : true;
 
-    const matchDoctor =
-      !doctor || doctor === "All" || row.referredDoctor === doctor;
+      return matchDoctor && matchFrom && matchTo;
+    });
+  }, [data, filters]);
 
-    const matchFrom = from ? testDate >= from : true;
-    const matchTo = to ? testDate <= to : true;
-
-    return matchDoctor && matchFrom && matchTo;
-  });
-
+  // Initialize react-table
   const table = useReactTable({
     data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 7,
-      },
-    },
+    initialState: { pagination: { pageSize: 7 } },
   });
 
   const handleRowClick = (id) => {
-    // Handle row click navigation
-    // path && navigate(`/${path}/${id}`);
+    if (
+      path &&
+      [
+        "admission",
+        "birth",
+        "patient",
+        "department",
+        "bed",
+        "bed-assign",
+        "appointment",
+        "nurse",
+        "docter",
+        "pharmacist",
+        "prescription",
+        "ambulance",
+      ].includes(path)
+    ) {
+      navigate(`/${path}/${id}`);
+    } else if (
+      path &&
+      ["bank-ledger", "patient-ledger", "cash-ledger", "doctor-ledger", "supplier-ledger", "pharmacy-ledger", "insurance-ledger", "diagnostics-ledger", "general-ledger"].includes(path)
+    ) {
+      navigate(`/ledger/${path}/${id}`);
+    }
   };
 
   return (
-    <div className="mt-5 max-w-[1050px]  m-auto flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="mt-5 max-w-[1050px] m-auto flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
       {/* Table Header with Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-b border-gray-200">
         <div className="relative w-full sm:w-64 mb-4 sm:mb-0">
@@ -156,10 +176,11 @@ const Table = ({ data, columns, filters = {}, getRowProps }) => {
               {Math.min(
                 (table.getState().pagination.pageIndex + 1) *
                   table.getState().pagination.pageSize,
-                data.length
+                filteredData.length
               )}
             </span>{" "}
-            of <span className="font-medium">{data.length}</span> results
+            of <span className="font-medium">{filteredData.length}</span>{" "}
+            results
           </p>
         </div>
 

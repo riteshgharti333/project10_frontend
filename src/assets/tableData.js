@@ -1010,9 +1010,7 @@ export const productData = [
   },
 ];
 
-
 ///////////////////////
-
 
 export const productGSTData = [
   {
@@ -1058,8 +1056,6 @@ export const productGSTData = [
 ];
 
 ///////////////////////////////
-
-
 
 export const billData = [
   {
@@ -1134,7 +1130,6 @@ export const receiptData = [
     remarks: "Full bill settlement",
   },
 ];
-
 
 //////////////////////
 
@@ -1300,3 +1295,428 @@ export const employeeData = [
     department: "IT Support",
   },
 ];
+
+////////////////////////////
+
+export const invoiceData = [
+  {
+    manufacturer: "MedTech Solutions",
+    invoiceDate: "2025-05-20",
+    invoiceNo: "INV-1001",
+    partNo: "MT-001",
+    description: "ECG Machine",
+    invoiceQty: 2,
+    taxableAmount: 120000.0,
+  },
+  {
+    manufacturer: "HealthPlus Equipments",
+    invoiceDate: "2025-05-21",
+    invoiceNo: "INV-1002",
+    partNo: "HP-045",
+    description: "Syringe Pump",
+    invoiceQty: 5,
+    taxableAmount: 35000.0,
+  },
+  {
+    manufacturer: "CareWell Pharma",
+    invoiceDate: "2025-05-22",
+    invoiceNo: "INV-1003",
+    partNo: "CW-888",
+    description: "IV Cannula (Gauge 24)",
+    invoiceQty: 100,
+    taxableAmount: 8000.0,
+  },
+  {
+    manufacturer: "BioMed India",
+    invoiceDate: "2025-05-23",
+    invoiceNo: "INV-1004",
+    partNo: "BM-302",
+    description: "Defibrillator Pads",
+    invoiceQty: 10,
+    taxableAmount: 15000.0,
+  },
+  {
+    manufacturer: "SterileMed Corp.",
+    invoiceDate: "2025-05-24",
+    invoiceNo: "INV-1005",
+    partNo: "SM-500",
+    description: "Surgical Gloves - Latex Free",
+    invoiceQty: 200,
+    taxableAmount: 24000.0,
+  },
+  {
+    manufacturer: "MedEquip Systems",
+    invoiceDate: "2025-05-25",
+    invoiceNo: "INV-1006",
+    partNo: "ME-777",
+    description: "Digital Thermometers",
+    invoiceQty: 50,
+    taxableAmount: 15000.0,
+  },
+  {
+    manufacturer: "LifeLine Devices",
+    invoiceDate: "2025-05-26",
+    invoiceNo: "INV-1007",
+    partNo: "LD-333",
+    description: "Portable Oxygen Concentrators",
+    invoiceQty: 3,
+    taxableAmount: 75000.0,
+  },
+  {
+    manufacturer: "SafeSurg Products",
+    invoiceDate: "2025-05-26",
+    invoiceNo: "INV-1008",
+    partNo: "SS-999",
+    description: "Surgical Masks - 3 Ply",
+    invoiceQty: 1000,
+    taxableAmount: 5000.0,
+  },
+  {
+    manufacturer: "NovaCare Technologies",
+    invoiceDate: "2025-05-26",
+    invoiceNo: "INV-1009",
+    partNo: "NC-212",
+    description: "Ultrasound Gel",
+    invoiceQty: 100,
+    taxableAmount: 3000.0,
+  },
+  {
+    manufacturer: "Pulse Medical",
+    invoiceDate: "2025-05-26",
+    invoiceNo: "INV-1010",
+    partNo: "PM-010",
+    description: "Stethoscopes",
+    invoiceQty: 20,
+    taxableAmount: 20000.0,
+  },
+];
+
+////////////////////
+
+export const provisionalData = [
+  {
+    billNo: "INV1001",
+    billDate: "2025-05-27",
+    patientName: "Mr. Ramesh Sharma",
+    phoneNo: "9876543210",
+    totalAmount: 2500.0,
+  },
+  {
+    billNo: "INV1002",
+    billDate: "2025-05-26",
+    patientName: "Mrs. Sita Verma",
+    phoneNo: "9811122233",
+    totalAmount: 4300.5,
+  },
+  {
+    billNo: "INV1003",
+    billDate: "2025-05-25",
+    patientName: "Ms. Aarti Patel",
+    phoneNo: "9123456789",
+    totalAmount: 1200.0,
+  },
+  {
+    billNo: "INV1004",
+    billDate: "2025-05-24",
+    patientName: "Mr. Vijay Rao",
+    phoneNo: "9001234567",
+    totalAmount: 1800.75,
+  },
+  {
+    billNo: "INV1005",
+    billDate: "2025-05-23",
+    patientName: "Mrs. Kavita Nair",
+    phoneNo: "9898989898",
+    totalAmount: 6200.9,
+  },
+  {
+    billNo: "INV1006",
+    billDate: "2025-05-22",
+    patientName: "Mr. Arjun Desai",
+    phoneNo: "9011223344",
+    totalAmount: 3100.0,
+  },
+  {
+    billNo: "INV1007",
+    billDate: "2025-05-21",
+    patientName: "Ms. Priya Sen",
+    phoneNo: "9990001112",
+    totalAmount: 4700.25,
+  },
+  {
+    billNo: "INV1008",
+    billDate: "2025-05-20",
+    patientName: "Mr. Manoj Nair",
+    phoneNo: "9888777666",
+    totalAmount: 2899.99,
+  },
+  {
+    billNo: "INV1009",
+    billDate: "2025-05-19",
+    patientName: "Mrs. Anjali Mehra",
+    phoneNo: "9776655443",
+    totalAmount: 5400.1,
+  },
+  {
+    billNo: "INV1010",
+    billDate: "2025-05-18",
+    patientName: "Dr. Akash Reddy",
+    phoneNo: "9090909090",
+    totalAmount: 3900.75,
+  },
+];
+
+////////////////////
+
+export const viewInvoiceData = [
+  {
+    product: "Paracetamol 500mg",
+    hsnCode: "30045010",
+    serialCode: "P500-001",
+    quantity: 10,
+    mrp: 15.0,
+    discount: 5,
+    rate: 14.25,
+    taxableAmount: 142.5,
+    gstPercent: 12,
+    totalGstAmount: 17.1,
+    cgstAmount: 8.55,
+    totalAmount: 159.6,
+  },
+  {
+    product: "Amoxicillin 250mg",
+    hsnCode: "30031010",
+    serialCode: "A250-022",
+    quantity: 5,
+    mrp: 20.0,
+    discount: 10,
+    rate: 18.0,
+    taxableAmount: 90.0,
+    gstPercent: 12,
+    totalGstAmount: 10.8,
+    cgstAmount: 5.4,
+    totalAmount: 100.8,
+  },
+  {
+    product: "Vitamin D3 Syrup",
+    hsnCode: "30049011",
+    serialCode: "VD3-103",
+    quantity: 3,
+    mrp: 100.0,
+    discount: 0,
+    rate: 100.0,
+    taxableAmount: 300.0,
+    gstPercent: 5,
+    totalGstAmount: 15.0,
+    cgstAmount: 7.5,
+    totalAmount: 315.0,
+  },
+];
+
+/////////////////////////////
+
+export const dueData = [
+  {
+    registrationNo: "REG001",
+    name: "John Doe",
+    mobile: "9876543210",
+    address: "123 Street, Mumbai",
+    totalBill: 5000,
+    totalPaid: 3000,
+    totalDue: 2000,
+  },
+  {
+    registrationNo: "REG002",
+    name: "Jane Smith",
+    mobile: "9123456780",
+    address: "456 Avenue, Delhi",
+    totalBill: 7000,
+    totalPaid: 4000,
+    totalDue: 3000,
+  },
+  {
+    registrationNo: "REG003",
+    name: "Amit Sharma",
+    mobile: "9823456789",
+    address: "Sector 21, Noida",
+    totalBill: 8500,
+    totalPaid: 8500,
+    totalDue: 0,
+  },
+  {
+    registrationNo: "REG004",
+    name: "Priya Verma",
+    mobile: "9988776655",
+    address: "MG Road, Pune",
+    totalBill: 6200,
+    totalPaid: 3200,
+    totalDue: 3000,
+  },
+  {
+    registrationNo: "REG005",
+    name: "Ravi Kumar",
+    mobile: "9001122334",
+    address: "Park Street, Kolkata",
+    totalBill: 4500,
+    totalPaid: 1500,
+    totalDue: 3000,
+  },
+  {
+    registrationNo: "REG006",
+    name: "Anita Singh",
+    mobile: "9870011223",
+    address: "Anna Nagar, Chennai",
+    totalBill: 9600,
+    totalPaid: 5600,
+    totalDue: 4000,
+  },
+  {
+    registrationNo: "REG007",
+    name: "Suresh Nair",
+    mobile: "9765432100",
+    address: "Palayam, Trivandrum",
+    totalBill: 3000,
+    totalPaid: 1000,
+    totalDue: 2000,
+  },
+  {
+    registrationNo: "REG008",
+    name: "Meera Joshi",
+    mobile: "9123001122",
+    address: "Baner Road, Pune",
+    totalBill: 10000,
+    totalPaid: 6000,
+    totalDue: 4000,
+  },
+  {
+    registrationNo: "REG009",
+    name: "Rahul Mehta",
+    mobile: "9988998877",
+    address: "DLF Phase 3, Gurgaon",
+    totalBill: 7800,
+    totalPaid: 7800,
+    totalDue: 0,
+  },
+  {
+    registrationNo: "REG010",
+    name: "Kavita Patel",
+    mobile: "9090909090",
+    address: "Ashram Road, Ahmedabad",
+    totalBill: 5600,
+    totalPaid: 2600,
+    totalDue: 3000,
+  },
+];
+
+
+//////////////////////
+
+
+export const paymentDetailsData = [
+  {
+    date: "2025-05-01",
+    invoiceNo: "INV001",
+    amount: 1500,
+    mode: "Cash",
+  },
+  {
+    date: "2025-05-02",
+    invoiceNo: "INV002",
+    amount: 2000,
+    mode: "UPI",
+  },
+  {
+    date: "2025-05-04",
+    invoiceNo: "INV003",
+    amount: 1800,
+    mode: "Credit Card",
+  },
+  {
+    date: "2025-05-06",
+    invoiceNo: "INV004",
+    amount: 2200,
+    mode: "Net Banking",
+  },
+];
+
+
+/////////////////////
+
+export const paymentViewData = [
+  {
+    receiptNo: "MR001",
+    patientName: "John Doe",
+    paymentMode: "Cash",
+    amount: 1500,
+    transactionMode: "Offline",
+  },
+  {
+    receiptNo: "MR002",
+    patientName: "Jane Smith",
+    paymentMode: "UPI",
+    amount: 2000,
+    transactionMode: "Online",
+  },
+  {
+    receiptNo: "MR003",
+    patientName: "Amit Patel",
+    paymentMode: "Net Banking",
+    amount: 1800,
+    transactionMode: "Online",
+  },
+  {
+    receiptNo: "MR004",
+    patientName: "Priya Mehra",
+    paymentMode: "Credit Card",
+    amount: 2500,
+    transactionMode: "Online",
+  },
+];
+
+////////////////////
+
+export const dischargeData = [
+  {
+    dischargeId: "DIS001",
+    patientName: "Rahul Sharma",
+    registrationNo: "REG101",
+    gender: "Male",
+    age: 32,
+    doctorName: "Dr. A. Verma",
+    diagnosis: "Dengue Fever",
+    admissionDate: "2024-06-01",
+    dischargeDate: "2024-06-07",
+    totalBill: 15000,
+    totalPaid: 12000,
+    dueAmount: 3000,
+  },
+  {
+    dischargeId: "DIS002",
+    patientName: "Sneha Kapoor",
+    registrationNo: "REG102",
+    gender: "Female",
+    age: 25,
+    doctorName: "Dr. P. Singh",
+    diagnosis: "Appendicitis",
+    admissionDate: "2024-06-03",
+    dischargeDate: "2024-06-10",
+    totalBill: 22000,
+    totalPaid: 22000,
+    dueAmount: 0,
+  },
+  {
+    dischargeId: "DIS003",
+    patientName: "Ravi Mehta",
+    registrationNo: "REG103",
+    gender: "Male",
+    age: 45,
+    doctorName: "Dr. M. Khan",
+    diagnosis: "Fracture - Right Arm",
+    admissionDate: "2024-06-05",
+    dischargeDate: "2024-06-12",
+    totalBill: 18000,
+    totalPaid: 10000,
+    dueAmount: 8000,
+  },
+];
+

@@ -126,7 +126,7 @@ const SupplierLedger = () => {
         </Link>
       </div>
 
-      <Table data={supplierLedgerData} columns={columns} />
+      <Table data={supplierLedgerData} columns={columns} path="supplier-ledger" />
     </div>
   );
 };

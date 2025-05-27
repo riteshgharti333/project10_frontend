@@ -77,7 +77,7 @@ const DiagnosticsLedger = () => {
         </Link>
       </div>
 
-      <Table data={diagnosticLedgerData} columns={columns} />
+      <Table data={diagnosticLedgerData} columns={columns} path="diagnostics-ledger"/>
     </div>
   );
 };

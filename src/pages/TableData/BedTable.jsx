@@ -58,7 +58,7 @@ const BedTable = () => {
         </Link>
       </div>
 
-      <Table data={bedData} columns={columns} getRowProps={getRowProps} />
+      <Table data={bedData} columns={columns} getRowProps={getRowProps} path="bed"/>
     </div>
   );
 };

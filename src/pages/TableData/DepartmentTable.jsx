@@ -67,7 +67,7 @@ const DepartmentTable = () => {
         </Link>
       </div>
 
-      <Table data={departmentData} columns={columns} />
+      <Table data={departmentData} columns={columns} path="department" />
     </div>
   );
 };

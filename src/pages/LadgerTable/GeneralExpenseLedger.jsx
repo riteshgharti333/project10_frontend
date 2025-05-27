@@ -87,7 +87,7 @@ const GeneralExpenseLedger = () => {
         </Link>
       </div>
 
-      <Table data={generalLedgerData} columns={columns} />
+      <Table data={generalLedgerData} columns={columns} path="general-ledger" />
     </div>
   );
 };

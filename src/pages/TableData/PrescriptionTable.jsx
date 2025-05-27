@@ -46,7 +46,7 @@ const PrescriptionTable = () => {
         </Link>
       </div>
 
-      <Table data={prescriptionData} columns={columns} />
+      <Table data={prescriptionData} columns={columns} path="prescription" />
     </div>
   );
 };

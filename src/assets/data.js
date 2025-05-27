@@ -30,6 +30,7 @@ import { MdOutlineNoteAdd } from "react-icons/md";
 import { LiaMoneyBillWaveSolid } from "react-icons/lia";
 import { MdOutlinePayments } from "react-icons/md";
 import { CgGirl } from "react-icons/cg";
+import { IoMdBook } from "react-icons/io";
 
 const ledgerTitles = [
   {
@@ -249,18 +250,32 @@ export const sidebar2Data = [
     icon: MdOutlinePayments,
     link: "/payment-vouchars",
   },
-    {
+  {
     title: "User Module",
     icon: FiUser,
-   subItems: [
-      { title: "Employee", link: "/employees" },
-    ],
+    subItems: [{ title: "Employee", link: "/employees" }],
   },
-    {
+  {
     title: "HR Management",
     icon: CgGirl,
-   subItems: [
-      { title: "Sallery", link: "/service-charges-update" },
+    subItems: [{ title: "Sallery", link: "/service-charges-update" }],
+  },
+];
+
+export const sidebar3Data = [
+  {
+    title: "Reports",
+    icon: IoMdBook,
+    subItems: [
+      { title: "Purchase Report", link: "/purchase-report" },
+      {
+        title: "Provisional Invoice Report",
+        link: "/provisional-invoice-report",
+      },
+      { title: "Final Invoice Report", link: "/provisional-invoice-report" },
+      { title: "Due List Register", link: "/due-lists" },
+      { title: "Money Receipt Register", link: "/view-money-receipts" },
+      {title: "Discharge List Register", link: "/discharge-lists" },
     ],
   },
 ];
@@ -279,6 +294,7 @@ import {
   FaBriefcase,
   FaUserMd,
 } from "react-icons/fa";
+import { title } from "framer-motion/client";
 
 // export const formFields = [
 //   {

@@ -51,7 +51,7 @@ const AppointmentTable = () => {
         </Link>
       </div>
 
-      <Table data={appointmentData} columns={columns} />
+      <Table data={appointmentData} columns={columns} path="appointment" />
     </div>
   );
 };

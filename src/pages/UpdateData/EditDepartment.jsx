@@ -1,112 +1,73 @@
 import React, { useState } from "react";
-import {
-  FaBaby,
-  FaClock,
-  FaVenusMars,
-  FaWeight,
-  FaUser,
-  FaPhone,
-} from "react-icons/fa";
-import { FaArrowLeft } from "react-icons/fa6";
+import { FaBuilding, FaUser, FaPhone, FaArrowLeft } from "react-icons/fa";
 import BackButton from "../../components/BackButton/BackButton";
 
-const BirthRegister = () => {
+const EditDepartment = () => {
   const [formData, setFormData] = useState({
-    birthDate: "",
-    birthTime: "",
-    babySex: "",
-    babyWeight: "",
-    fatherName: "",
-    motherName: "",
-    mobile: "",
-    deliveryType: "",
-    birthPlace: "",
-    attendantName: "",
+    departmentName: "",
+    departmentHead: "",
+    contactNumber: "",
+    email: "",
+    location: "",
+    description: "",
+    status: "Active",
   });
 
   const formFields = [
     {
-      section: "Baby Details",
-      icon: <FaBaby className="text-blue-500" />,
+      section: "Department Information",
+      icon: <FaBuilding className="text-blue-500" />,
       fields: [
         {
-          label: "Birth Date",
-          type: "date",
-          name: "birthDate",
-          placeholder: "Select birth date",
-        },
-        {
-          label: "Birth Time",
-          type: "time",
-          name: "birthTime",
-          placeholder: "Select birth time",
-          icon: <FaClock className="text-gray-400" />,
-        },
-        {
-          label: "Baby's Sex",
-          type: "select",
-          name: "babySex",
-          placeholder: "Select baby's sex",
-          options: ["Male", "Female"],
-        },
-        {
-          label: "Baby's Weight (kg)",
-          type: "number",
-          name: "babyWeight",
-          placeholder: "Enter baby's weight",
-          step: "0.01",
-          icon: <FaWeight className="text-gray-400" />,
-        },
-      ],
-    },
-    {
-      section: "Parent Information",
-      icon: <FaUser className="text-blue-500" />,
-      fields: [
-        {
-          label: "Father's Name",
+          label: "Department Name",
           type: "text",
-          name: "fatherName",
-          placeholder: "Enter father's full name",
+          name: "departmentName",
+          placeholder: "Enter department name",
         },
         {
-          label: "Mother's Name",
+          label: "Department Head",
           type: "text",
-          name: "motherName",
-          placeholder: "Enter mother's full name",
+          name: "departmentHead",
+          placeholder: "Enter department head name",
+          icon: <FaUser className="text-gray-400" />,
         },
         {
-          label: "Mobile Number",
+          label: "Contact Number",
           type: "tel",
-          name: "mobile",
-          placeholder: "Enter mobile number",
+          name: "contactNumber",
+          placeholder: "Enter contact number",
           icon: <FaPhone className="text-gray-400" />,
         },
+        {
+          label: "Email",
+          type: "email",
+          name: "email",
+          placeholder: "Enter department email",
+        },
       ],
     },
     {
-      section: "Birth Information",
-      icon: <FaBaby className="text-blue-500" />,
+      section: "Additional Details",
+      icon: <FaBuilding className="text-blue-500" />,
       fields: [
         {
-          label: "Type of Delivery",
-          type: "select",
-          name: "deliveryType",
-          placeholder: "Select delivery type",
-          options: ["Normal", "Cesarean", "Forceps", "Vacuum"],
-        },
-        {
-          label: "Place of Birth",
-          type: "select",
-          name: "birthPlace",
-          placeholder: "Select birth place",
-          options: ["Hospital", "Home", "Clinic", "Other"],
-        },
-        {
-          label: "Attendant's Name",
+          label: "Location",
           type: "text",
-          name: "attendantName",
-          placeholder: "Enter attendant's name",
+          name: "location",
+          placeholder: "Enter department location",
+        },
+        {
+          label: "Description",
+          type: "textarea",
+          name: "description",
+          placeholder: "Enter department description",
+        },
+        {
+          label: "Status",
+          type: "select",
+          name: "status",
+          placeholder: "Select department status",
+          options: ["Active", "Inactive"],
         },
       ],
     },
@@ -126,18 +87,23 @@ const BirthRegister = () => {
     // Add form submission logic here
   };
 
+  const handleBack = () => {
+    // Add back navigation logic here
+    console.log("Back button clicked");
+  };
+
   return (
-    <div className=" mx-auto">
+    <div className="mx-auto">
       <div className="mb-8">
         <div className="flex items-center">
           <BackButton />
           <div>
             <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-              <FaBaby className="mr-2 text-pink-500" />
-              Baby Birth Registration
+              <FaBuilding className="mr-2 text-blue-500" />
+              New Department
             </h2>
             <p className="text-gray-600 mt-1">
-              Please enter all required details for birth registration
+              Please enter all required details for the new department
             </p>
           </div>
         </div>
@@ -163,7 +129,12 @@ const BirthRegister = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {section.fields.map((field, fieldIndex) => (
-                <div key={fieldIndex} className="space-y-1">
+                <div
+                  key={fieldIndex}
+                  className={`space-y-1 ${
+                    field.type === "textarea" ? "md:col-span-2" : ""
+                  }`}
+                >
                   <label className="block text-sm font-medium text-gray-700">
                     {field.label}
                     <span className="text-red-500 ml-1">*</span>
@@ -200,6 +171,16 @@ const BirthRegister = () => {
                         </svg>
                       </div>
                     </div>
+                  ) : field.type === "textarea" ? (
+                    <textarea
+                      name={field.name}
+                      value={formData[field.name]}
+                      onChange={handleChange}
+                      placeholder={field.placeholder}
+                      rows="3"
+                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
                   ) : (
                     <div className="relative">
                       <input
@@ -208,7 +189,6 @@ const BirthRegister = () => {
                         value={formData[field.name]}
                         onChange={handleChange}
                         placeholder={field.placeholder}
-                        step={field.step}
                         className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
                           field.icon ? "pl-10" : ""
                         }`}
@@ -229,7 +209,7 @@ const BirthRegister = () => {
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
           <button type="submit" className="btn-primary">
-            Register Birth
+            Create Department
           </button>
         </div>
       </form>
@@ -237,4 +217,4 @@ const BirthRegister = () => {
   );
 };
 
-export default BirthRegister;
+export default EditDepartment;

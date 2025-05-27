@@ -93,7 +93,7 @@ const PharmacyLedger = () => {
         </Link>
       </div>
 
-      <Table data={pharmacyLedgerData} columns={columns} />
+      <Table data={pharmacyLedgerData} columns={columns} path="pharmacy-ledger" />
     </div>
   );
 };

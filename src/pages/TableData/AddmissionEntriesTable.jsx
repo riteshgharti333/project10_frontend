@@ -98,7 +98,7 @@ const columns = useMemo(
         </Link>
       </div>
 
-      <Table data={dummyPatients} columns={columns} />
+      <Table data={dummyPatients} columns={columns} path="admission" />
 
 
     </div>

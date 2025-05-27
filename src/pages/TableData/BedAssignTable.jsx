@@ -87,7 +87,7 @@ const BedAssignTable = () => {
         </Link>
       </div>
 
-      <Table data={allocatedBedData} columns={columns} />
+      <Table data={allocatedBedData} columns={columns} path="bed-assign" />
     </div>
   );
 };
