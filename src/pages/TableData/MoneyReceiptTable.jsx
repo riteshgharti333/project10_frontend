@@ -3,8 +3,15 @@ import { FaPlus } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import Table from "../../components/Table/Table";
 import { receiptData } from "../../assets/tableData";
+import { useGetMoneyReceipts } from "../../feature/transectionHooks/useMoneyReceipt";
+import Loader from "../../components/Loader/Loader";
 
 const MoneyReceiptTable = () => {
+
+  
+      const { data, error, isLoading, isError } = useGetMoneyReceipts();
+    
+  
 
 const columns = useMemo(
   () => [
@@ -66,6 +73,12 @@ const columns = useMemo(
   []
 );
 
+
+    if (isLoading) {
+    return <Loader />;
+  }
+
+
   return (
     <div className="">
       <div className="flex justify-between items-center mb-4">
@@ -77,7 +90,7 @@ const columns = useMemo(
         </Link>
       </div>
 
-      <Table data={receiptData} columns={columns} />
+      <Table data={data} columns={columns} path="money-receipt"/>
     </div>
   );
 };

@@ -3,8 +3,12 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { nurseData, productGSTData } from "../../assets/tableData";
+import { useGetProductEntries } from "../../feature/itemHooks/useSubProduct";
+import Loader from "../../components/Loader/Loader";
 
 const AllProductTable = () => {
+  const { data, error, isLoading, isError } = useGetProductEntries();
+
   const columns = useMemo(
     () => [
       {
@@ -41,6 +45,10 @@ const AllProductTable = () => {
     []
   );
 
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -52,9 +60,9 @@ const AllProductTable = () => {
         </Link>
       </div>
 
-      <Table data={productGSTData} columns={columns} />
+      <Table data={data} columns={columns} path="sub-product" />
     </div>
   );
 };
 
-export default AllProductTable
+export default AllProductTable;

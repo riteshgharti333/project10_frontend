@@ -275,7 +275,7 @@ export const sidebar3Data = [
       { title: "Final Invoice Report", link: "/provisional-invoice-report" },
       { title: "Due List Register", link: "/due-lists" },
       { title: "Money Receipt Register", link: "/view-money-receipts" },
-      {title: "Discharge List Register", link: "/discharge-lists" },
+      { title: "Discharge List Register", link: "/discharge-lists" },
     ],
   },
 ];

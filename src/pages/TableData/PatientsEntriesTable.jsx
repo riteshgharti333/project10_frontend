@@ -3,12 +3,18 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { birthData, dummyPatients, patientData } from "../../assets/tableData";
+import { useGetPatients } from "../../feature/hooks/usePatient";
+import Loader from "../../components/Loader/Loader";
 
 const PatientsEntriesTable = () => {
+  const { data, error, isLoading, isError } = useGetPatients();
+
+  console.log(data);
+
   const columns = useMemo(
     () => [
       {
-        accessorKey: "name",
+        accessorKey: "fullName",
         header: "Name",
         cell: (info) => info.getValue(),
       },
@@ -18,12 +24,12 @@ const PatientsEntriesTable = () => {
         cell: (info) => `${info.getValue()} yrs`,
       },
       {
-        accessorKey: "mobile",
+        accessorKey: "mobileNumber",
         header: "Mobile",
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "bed",
+        accessorKey: "bedNumber",
         header: "Bed",
         cell: (info) => info.getValue(),
       },
@@ -38,7 +44,7 @@ const PatientsEntriesTable = () => {
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "aadhaar",
+        accessorKey: "aadhaarNumber",
         header: "Aadhaar",
         cell: (info) => info.getValue(),
       },
@@ -51,6 +57,10 @@ const PatientsEntriesTable = () => {
     []
   );
 
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -62,7 +72,7 @@ const PatientsEntriesTable = () => {
         </Link>
       </div>
 
-      <Table data={patientData} columns={columns} path="patient" />
+      <Table data={data} columns={columns} path="patient" />
     </div>
   );
 };

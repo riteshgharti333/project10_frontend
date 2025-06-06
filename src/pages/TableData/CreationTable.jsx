@@ -3,8 +3,15 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { brandData, nurseData } from "../../assets/tableData";
+import { useGetBrands } from "../../feature/itemHooks/useBrand";
+import Loader from "../../components/Loader/Loader";
 
 const CreationTable = () => {
+
+   const { data, error, isLoading, isError } = useGetBrands();
+
+   console.log(data)
+
   const columns = useMemo(
     () => [
       {
@@ -47,6 +54,10 @@ const CreationTable = () => {
     []
   );
 
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -58,7 +69,7 @@ const CreationTable = () => {
         </Link>
       </div>
 
-      <Table data={brandData} columns={columns} />
+      <Table data={data} columns={columns} path="brand" />
     </div>
   );
 };

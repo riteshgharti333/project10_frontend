@@ -63,12 +63,30 @@ const Table = ({ data, columns, filters = {}, getRowProps, path }) => {
         "pharmacist",
         "prescription",
         "ambulance",
+        "xray",
+        "brand",
+        "product",
+        "sub-product",
+        "bill",
+        "money-receipt",
+        "vouchar",
+        "employee"
       ].includes(path)
     ) {
       navigate(`/${path}/${id}`);
     } else if (
       path &&
-      ["bank-ledger", "patient-ledger", "cash-ledger", "doctor-ledger", "supplier-ledger", "pharmacy-ledger", "insurance-ledger", "diagnostics-ledger", "general-ledger"].includes(path)
+      [
+        "bank-ledger",
+        "patient-ledger",
+        "cash-ledger",
+        "doctor-ledger",
+        "supplier-ledger",
+        "pharmacy-ledger",
+        "insurance-ledger",
+        "diagnostics-ledger",
+        "general-ledger",
+      ].includes(path)
     ) {
       navigate(`/ledger/${path}/${id}`);
     }

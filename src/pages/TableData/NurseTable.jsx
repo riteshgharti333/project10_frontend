@@ -3,22 +3,26 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { nurseData } from "../../assets/tableData";
+import { useGetNurses } from "../../feature/hooks/useNurse";
+import Loader from "../../components/Loader/Loader";
 
 const NurseTable = () => {
+  const { data, error, isLoading, isError } = useGetNurses();
+
   const columns = useMemo(
     () => [
       {
-        accessorKey: "name",
+        accessorKey: "fullName",
         header: "Nurse Name",
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "mobile",
+        accessorKey: "mobileNumber",
         header: "Mobile No.",
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "regNo",
+        accessorKey: "registrationNo",
         header: "Registration No.",
         cell: (info) => info.getValue(),
       },
@@ -88,6 +92,9 @@ const NurseTable = () => {
     []
   );
 
+  if (isLoading) {
+    return <Loader />;
+  }
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -99,7 +106,7 @@ const NurseTable = () => {
         </Link>
       </div>
 
-      <Table data={nurseData} columns={columns} path="nurse"/>
+      <Table data={data} columns={columns} path="nurse" />
     </div>
   );
 };

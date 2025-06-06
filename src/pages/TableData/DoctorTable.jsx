@@ -3,22 +3,27 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { doctorData } from "../../assets/tableData";
+import { useGetDoctors } from "../../feature/hooks/useDoctor";
+import Loader from "../../components/Loader/Loader";
 
 const DoctorTable = () => {
+
+   const { data, error, isLoading, isError } = useGetDoctors();
+
   const columns = useMemo(
     () => [
       {
-        accessorKey: "name",
+        accessorKey: "fullName",
         header: "Doctor Name",
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "mobile",
+        accessorKey: "mobileNumber",
         header: "Mobile No.",
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "regNo",
+        accessorKey: "registrationNo",
         header: "Registration No.",
         cell: (info) => info.getValue(),
       },
@@ -72,6 +77,10 @@ const DoctorTable = () => {
     []
   );
 
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -83,7 +92,7 @@ const DoctorTable = () => {
         </Link>
       </div>
 
-      <Table data={doctorData} columns={columns} path="docter"/>
+      <Table data={data} columns={columns} path="docter"/>
     </div>
   );
 };

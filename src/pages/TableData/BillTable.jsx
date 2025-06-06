@@ -3,8 +3,14 @@ import { FaPlus } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import Table from "../../components/Table/Table";
 import { bedData, billData } from "../../assets/tableData";
+import { useGetBills } from "../../feature/transectionHooks/useBill";
+import Loader from "../../components/Loader/Loader";
 
 const BillTable = () => {
+
+    const { data, error, isLoading, isError } = useGetBills();
+  
+
   const columns = useMemo(
     () => [
       {
@@ -59,6 +65,10 @@ const BillTable = () => {
     []
   );
 
+    if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center mb-4">
@@ -70,7 +80,7 @@ const BillTable = () => {
         </Link>
       </div>
 
-      <Table data={billData} columns={columns} />
+      <Table data={data} columns={columns} path="bill"/>
     </div>
   );
 };

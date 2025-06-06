@@ -7,8 +7,13 @@ import {
   doctorLedgerData,
   patientLedgerData,
 } from "../../assets/ledgerData";
+import { useGetBankLedgerEntries } from "../../feature/ledgerHook/useBankLedger";
+import Loader from "../../components/Loader/Loader";
 
 const BankLedger = () => {
+
+   const { data, error, isLoading, isError } = useGetBankLedgerEntries();
+
   const columns = useMemo(
     () => [
       {
@@ -63,6 +68,10 @@ const BankLedger = () => {
     []
   );
 
+    if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -74,7 +83,7 @@ const BankLedger = () => {
         </Link>
       </div>
 
-      <Table data={bankLedgerData} columns={columns} path="bank-ledger" />
+      <Table data={data} columns={columns} path="bank-ledger" />
     </div>
   );
 };

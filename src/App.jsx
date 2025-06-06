@@ -74,15 +74,33 @@ import EditPharmacist from "./pages/UpdateData/EditPharmacist";
 import EditPrescription from "./pages/UpdateData/EditPrescription";
 import EditAmbulance from "./pages/UpdateData/EditAmbulance";
 import EditLedger from "./pages/UpdateData/EditLedger";
+import EditXray from "./pages/UpdateData/EditXray";
+import EditBrand from "./pages/UpdateData/EditBrand";
+import EditProduct from "./pages/UpdateData/EditProduct";
+import EditSubProduct from "./pages/UpdateData/EditSubProduct";
+import EditBill from "./pages/UpdateData/EditBill";
+import EditMoneyReceipt from "./pages/UpdateData/EditMoneyReceipt";
+import EditVouchar from "./pages/UpdateData/EditVouchar";
+import EditEmployee from "./pages/UpdateData/EditEmployee";
+import Login from "./pages/Auth/Login";
+import Profile from "./pages/Auth/Profile";
+import { Toaster } from "sonner";
+
+
 
 function App() {
   return (
     <div className="app">
+       
       <BrowserRouter>
+        <Toaster position="top-center" richColors />
         <Routes>
+          <Route path="/login" element={<Login />} />
+
           <Route element={<Layout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
 
             {/* Admission Entry  */}
             <Route
@@ -156,12 +174,11 @@ function App() {
               path="/xray/xray-commision-report"
               element={<XrayReportTable />}
             />
+            <Route path="/xray/:id" element={<EditXray />} />
 
             {/* Ledger */}
             <Route path="/new-ledger" element={<NewLedger />} />
             <Route path="/ledger/:ledgerName/:id" element={<EditLedger />} />
-
-            
 
             {/* Ledger Tables */}
             <Route path="/ledger/patient-ledger" element={<PatientLedger />} />
@@ -191,11 +208,16 @@ function App() {
 
             {/* Item Services */}
             <Route path="/company-creation" element={<CreationTable />} />
+            <Route path="/brand/:id" element={<EditBrand />} />
             <Route path="/new-company-creation" element={<NewBrand />} />
+
             <Route path="/product-category" element={<ProductTable />} />
             <Route path="/add-product-category" element={<NewProduct />} />
+            <Route path="/product/:id" element={<EditProduct />} />
+
             <Route path="/add-product" element={<ProductEntryTable />} />
             <Route path="/new-product-entry" element={<NewProductEntry />} />
+            <Route path="/sub-product/:id" element={<EditSubProduct />} />
             <Route path="/all-products" element={<AllProductTable />} />
             <Route
               path="/service-charges-update"
@@ -205,21 +227,22 @@ function App() {
             {/* Transection */}
             <Route path="/bills" element={<BillTable />} />
             <Route path="/new-bill-entry" element={<NewBillEntry />} />
+            <Route path="/bill/:id" element={<EditBill />} />
+
             <Route path="/money-receipts" element={<MoneyReceiptTable />} />
             <Route
               path="/new-money-receipt-entry"
               element={<NewMoneyReceiptEntry />}
             />
-            <Route
-              path="/service-charges-update"
-              element={<ServiceChargesUpdate />}
-            />
+            <Route path="/money-receipt/:id" element={<EditMoneyReceipt />} />
 
             <Route path="/payment-vouchars" element={<VoucharTable />} />
             <Route path="/new-vouchar" element={<NewVouchar />} />
+            <Route path="/vouchar/:id" element={<EditVouchar />} />
 
             <Route path="/employees" element={<EmployeeTable />} />
             <Route path="/new-employee" element={<NewEmployee />} />
+            <Route path="/employee/:id" element={<EditEmployee />} />
 
             {/* Report */}
             <Route path="/purchase-report" element={<PurchaseReportTable />} />
@@ -238,6 +261,7 @@ function App() {
           </Route>
         </Routes>
       </BrowserRouter>
+
     </div>
   );
 }

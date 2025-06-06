@@ -83,7 +83,7 @@ const EmployeeTable = () => {
         </Link>
       </div>
 
-      <Table data={employeeData} columns={columns} />
+      <Table data={employeeData} columns={columns} path="employee"/>
     </div>
   );
 };

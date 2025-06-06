@@ -13,6 +13,7 @@ import {
 import { MdLocalHospital, MdGroups, MdForum } from "react-icons/md";
 import { IoMdNotificationsOutline } from "react-icons/io";
 import { BsChatDots, BsPeople } from "react-icons/bs";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -102,12 +103,12 @@ const Navbar = () => {
                   className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
                 >
                   <div className="py-1">
-                    <a
-                      href="#"
+                    <Link
+                      to={"/profile"}
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       <FiUser className="inline mr-2" /> Your Profile
-                    </a>
+                    </Link>
                     {/* <a
                       href="#"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -120,12 +121,12 @@ const Navbar = () => {
                     >
                       <FiHelpCircle className="inline mr-2" /> Help
                     </a> */}
-                    <a
-                      href="#"
+                    <Link
+                      to={"/login"}
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100"
                     >
                       <FiLogOut className="inline mr-2" /> Sign out
-                    </a>
+                    </Link>
                   </div>
                 </div>
               )}

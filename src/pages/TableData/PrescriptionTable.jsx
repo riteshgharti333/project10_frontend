@@ -3,8 +3,13 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { nurseData, pharmacistData, prescriptionData } from "../../assets/tableData";
+import { useGetPrescriptions } from "../../feature/hooks/usePrescription";
+import Loader from "../../components/Loader/Loader";
 
 const PrescriptionTable = () => {
+
+  const { data, error, isLoading, isError } = useGetPrescriptions();
+
   const columns = useMemo(
     () => [
       {
@@ -35,6 +40,10 @@ const PrescriptionTable = () => {
     []
   );
 
+   if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -46,7 +55,7 @@ const PrescriptionTable = () => {
         </Link>
       </div>
 
-      <Table data={prescriptionData} columns={columns} path="prescription" />
+      <Table data={data} columns={columns} path="prescription" />
     </div>
   );
 };

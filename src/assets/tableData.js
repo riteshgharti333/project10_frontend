@@ -1720,3 +1720,49 @@ export const dischargeData = [
   },
 ];
 
+
+
+//////////////////////
+
+export const voucherData = [
+  {
+    voucherId: "VCH001",
+    voucherDate: "2025-05-28",
+    paymentFor: "Office Rent",
+    voucherType: "Expense",
+    vendorName: "ABC Properties",
+    paymentDate: "2025-05-25",
+    amount: 25000,
+    paymentMode: "Bank Transfer",
+  },
+  {
+    voucherId: "VCH002",
+    voucherDate: "2025-05-28",
+    paymentFor: "Internet Bill",
+    voucherType: "Expense",
+    vendorName: "NetConnect Ltd.",
+    paymentDate: "2025-05-27",
+    amount: 1200,
+    paymentMode: "Cash",
+  },
+  {
+    voucherId: "VCH003",
+    voucherDate: "2025-05-28",
+    paymentFor: "Consulting Fees",
+    voucherType: "Service",
+    vendorName: "TechBrains Pvt Ltd",
+    paymentDate: "2025-05-26",
+    amount: 7500,
+    paymentMode: "Cheque",
+  },
+  {
+    voucherId: "VCH004",
+    voucherDate: "2025-05-28",
+    paymentFor: "Software Subscription",
+    voucherType: "Expense",
+    vendorName: "CloudCorp",
+    paymentDate: "2025-05-20",
+    amount: 5000,
+    paymentMode: "Bank Transfer",
+  }
+];

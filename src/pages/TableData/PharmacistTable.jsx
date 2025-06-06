@@ -3,22 +3,27 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { nurseData, pharmacistData } from "../../assets/tableData";
+import { useGetPharmacists } from "../../feature/hooks/usePharmacist";
+import Loader from "../../components/Loader/Loader";
 
 const PharmacistTable = () => {
+
+    const { data, error, isLoading, isError } = useGetPharmacists();
+
   const columns = useMemo(
     () => [
       {
-        accessorKey: "name",
+        accessorKey: "fullName",
         header: "Name",
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "mobile",
+        accessorKey: "mobileNumber",
         header: "Mobile No.",
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "regNo",
+        accessorKey: "registrationNo",
         header: "Registration No.",
         cell: (info) => info.getValue(),
       },
@@ -62,6 +67,10 @@ const PharmacistTable = () => {
     []
   );
 
+    if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -73,7 +82,7 @@ const PharmacistTable = () => {
         </Link>
       </div>
 
-      <Table data={pharmacistData} columns={columns} path="pharmacist" />
+      <Table data={data} columns={columns} path="pharmacist" />
     </div>
   );
 };

@@ -3,8 +3,13 @@ import { FaPlus } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import Table from "../../components/Table/Table";
 import {bedData} from "../../assets/tableData"
+import { useGetBeds } from "../../feature/hooks/useBed";
+import Loader from "../../components/Loader/Loader";
 
 const BedTable = () => {
+
+   const { data, error, isLoading, isError } = useGetBeds();
+  
 
   const columns = useMemo(
     () => [
@@ -42,6 +47,10 @@ const BedTable = () => {
     []
   );
 
+   if (isLoading) {
+    return <Loader />;
+  }
+
   const getRowProps = (row) => ({
     className:
       row.original.status === "Inactive" ? "bg-red-300" : "", 
@@ -58,7 +67,7 @@ const BedTable = () => {
         </Link>
       </div>
 
-      <Table data={bedData} columns={columns} getRowProps={getRowProps} path="bed"/>
+      <Table data={data} columns={columns} getRowProps={getRowProps} path="bed"/>
     </div>
   );
 };

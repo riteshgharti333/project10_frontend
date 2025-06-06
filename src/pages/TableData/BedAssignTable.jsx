@@ -3,8 +3,13 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { allocatedBedData, departmentData } from "../../assets/tableData";
+import { useGetBedAssignments } from "../../feature/hooks/useBedAssing";
+import Loader from "../../components/Loader/Loader";
 
 const BedAssignTable = () => {
+
+    const { data, error, isLoading, isError } = useGetBedAssignments();
+  
  
     const columns = useMemo(
   () => [
@@ -75,6 +80,10 @@ const BedAssignTable = () => {
   []
 );
 
+  if (isLoading) {
+    return <Loader />;
+  }
+
 
   return (
     <div className="">
@@ -87,7 +96,7 @@ const BedAssignTable = () => {
         </Link>
       </div>
 
-      <Table data={allocatedBedData} columns={columns} path="bed-assign" />
+      <Table data={data} columns={columns} path="bed-assign" />
     </div>
   );
 };

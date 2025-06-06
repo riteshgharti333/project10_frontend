@@ -3,8 +3,14 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { departmentData, vehicleData } from "../../assets/tableData";
+import { useGetAmbulances } from "../../feature/hooks/useAmbulance";
+import Loader from "../../components/Loader/Loader";
 
 const AmbulancesTable = () => {
+
+    const { data, error, isLoading, isError } = useGetAmbulances();
+  
+
   const columns = useMemo(
     () => [
       {
@@ -13,12 +19,12 @@ const AmbulancesTable = () => {
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "cardBrand",
+        accessorKey: "brand",
         header: "Card Brand",
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "registerNo",
+        accessorKey: "registrationNo",
         header: "Register No.",
         cell: (info) => info.getValue(),
       },
@@ -39,7 +45,7 @@ const AmbulancesTable = () => {
           const value = info.getValue();
           let badgeClass = "";
           switch (value) {
-            case "Active":
+            case "Available":
               badgeClass = "bg-green-100 text-green-700";
               break;
             case "Inactive":
@@ -62,6 +68,10 @@ const AmbulancesTable = () => {
     []
   );
 
+   if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -73,7 +83,7 @@ const AmbulancesTable = () => {
         </Link>
       </div>
 
-      <Table data={vehicleData} columns={columns} path="ambulance" />
+      <Table data={data} columns={columns} path="ambulance" />
     </div>
   );
 };

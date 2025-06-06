@@ -3,8 +3,13 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { birthData, dummyPatients } from "../../assets/tableData";
+import { useGetBirthRecords } from "../../feature/hooks/useBirth";
+import Loader from "../../components/Loader/Loader";
 
 const BirthEntriesTable = () => {
+  const { data, error, isLoading, isError } = useGetBirthRecords();
+
+
   const columns = useMemo(
     () => [
       {
@@ -37,17 +42,17 @@ const BirthEntriesTable = () => {
         cell: (info) => `${info.getValue()} kg`,
       },
       {
-        accessorKey: "fatherName",
+        accessorKey: "fathersName",
         header: "Father's Name",
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "motherName",
+        accessorKey: "mothersName",
         header: "Mother's Name",
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "mobile",
+        accessorKey: "mobileNumber",
         header: "Mobile No.",
         cell: (info) => info.getValue(),
       },
@@ -60,6 +65,10 @@ const BirthEntriesTable = () => {
     []
   );
 
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -71,7 +80,7 @@ const BirthEntriesTable = () => {
         </Link>
       </div>
 
-      <Table data={birthData} columns={columns} path="birth" />
+      <Table data={data} columns={columns} path="birth" />
     </div>
   );
 };

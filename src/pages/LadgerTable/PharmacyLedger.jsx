@@ -2,9 +2,19 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
-import { doctorLedgerData, patientLedgerData, pharmacyLedgerData } from "../../assets/ledgerData";
+import {
+  doctorLedgerData,
+  patientLedgerData,
+  pharmacyLedgerData,
+} from "../../assets/ledgerData";
+import { useGetPharmacyLedgerEntries } from "../../feature/ledgerHook/usePharmacyLedger";
+import Loader from "../../components/Loader/Loader";
 
 const PharmacyLedger = () => {
+
+    const { data, error, isLoading, isError } = useGetPharmacyLedgerEntries();
+  
+
   const columns = useMemo(
     () => [
       {
@@ -82,6 +92,10 @@ const PharmacyLedger = () => {
     []
   );
 
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -93,7 +107,11 @@ const PharmacyLedger = () => {
         </Link>
       </div>
 
-      <Table data={pharmacyLedgerData} columns={columns} path="pharmacy-ledger" />
+      <Table
+        data={data}
+        columns={columns}
+        path="pharmacy-ledger"
+      />
     </div>
   );
 };

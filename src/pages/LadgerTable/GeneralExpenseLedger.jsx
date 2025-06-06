@@ -7,8 +7,13 @@ import {
   generalLedgerData,
   patientLedgerData,
 } from "../../assets/ledgerData";
+import Loader from "../../components/Loader/Loader";
+import { useGetExpenseEntries } from "../../feature/ledgerHook/useExpenseLedger";
 
 const GeneralExpenseLedger = () => {
+
+   const { data, error, isLoading, isError } = useGetExpenseEntries();
+
   const columns = useMemo(
     () => [
       {
@@ -76,6 +81,11 @@ const GeneralExpenseLedger = () => {
     []
   );
 
+    if (isLoading) {
+    return <Loader />;
+  }
+
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -87,7 +97,7 @@ const GeneralExpenseLedger = () => {
         </Link>
       </div>
 
-      <Table data={generalLedgerData} columns={columns} path="general-ledger" />
+      <Table data={data} columns={columns} path="general-ledger" />
     </div>
   );
 };

@@ -8,8 +8,14 @@ import {
   insuranceLedgerData,
   patientLedgerData,
 } from "../../assets/ledgerData";
+import { useGetInsuranceLedgerEntries } from "../../feature/ledgerHook/useInsuranceLedger";
+import Loader from "../../components/Loader/Loader";
 
 const InsuranceTPALedger = () => {
+
+   const { data, error, isLoading, isError } = useGetInsuranceLedgerEntries();
+  
+
   const columns = useMemo(
     () => [
       {
@@ -74,6 +80,11 @@ const InsuranceTPALedger = () => {
     []
   );
 
+    if (isLoading) {
+    return <Loader />;
+  }
+
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -86,7 +97,7 @@ const InsuranceTPALedger = () => {
       </div>
 
       <Table
-        data={insuranceLedgerData}
+        data={data}
         columns={columns}
         path="insurance-ledger"
       />

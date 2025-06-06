@@ -3,8 +3,13 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { appointmentData } from "../../assets/tableData";
+import { useGetAppointments } from "../../feature/hooks/useAppointment";
+import Loader from "../../components/Loader/Loader";
 
 const AppointmentTable = () => {
+
+  const { data, error, isLoading, isError } = useGetAppointments();
+
   const columns = useMemo(
     () => [
       {
@@ -40,6 +45,10 @@ const AppointmentTable = () => {
     []
   );
 
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -51,7 +60,7 @@ const AppointmentTable = () => {
         </Link>
       </div>
 
-      <Table data={appointmentData} columns={columns} path="appointment" />
+      <Table data={data} columns={columns} path="appointment" />
     </div>
   );
 };

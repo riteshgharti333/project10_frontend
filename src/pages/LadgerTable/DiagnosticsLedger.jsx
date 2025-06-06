@@ -3,8 +3,13 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { diagnosticLedgerData, doctorLedgerData, patientLedgerData } from "../../assets/ledgerData";
+import { useGetDiagnosticsLedgerEntries } from "../../feature/ledgerHook/useDiagnosticsLedger";
+import Loader from "../../components/Loader/Loader";
 
 const DiagnosticsLedger = () => {
+
+  const { data, error, isLoading, isError } = useGetDiagnosticsLedgerEntries();
+  
   
   const columns = useMemo(() => [
   {
@@ -66,6 +71,12 @@ const DiagnosticsLedger = () => {
   },
 ], []);
 
+
+  if (isLoading) {
+    return <Loader />;
+  }
+
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -77,7 +88,7 @@ const DiagnosticsLedger = () => {
         </Link>
       </div>
 
-      <Table data={diagnosticLedgerData} columns={columns} path="diagnostics-ledger"/>
+      <Table data={data} columns={columns} path="diagnostics-ledger"/>
     </div>
   );
 };

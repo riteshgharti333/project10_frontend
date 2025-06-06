@@ -1,19 +1,22 @@
-import React, { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
-import { departmentData, dummyPatients } from "../../assets/tableData";
+import { useGetDepartments } from "../../feature/hooks/useDepartments";
+import Loader from "../../components/Loader/Loader";
 
 const DepartmentTable = () => {
+  const { data, error, isLoading, isError } = useGetDepartments();
+
   const columns = useMemo(
     () => [
       {
-        accessorKey: "departmentName",
+        accessorKey: "name",
         header: "Department",
         cell: (info) => info.getValue(),
       },
       {
-        accessorKey: "departmentHead",
+        accessorKey: "head",
         header: "Head",
         cell: (info) => info.getValue(),
       },
@@ -32,11 +35,6 @@ const DepartmentTable = () => {
         header: "Location",
         cell: (info) => info.getValue(),
       },
-      // {
-      //   accessorKey: "description",
-      //   header: "Description",
-      //   cell: (info) => info.getValue(),
-      // },
       {
         accessorKey: "status",
         header: "Status",
@@ -56,18 +54,22 @@ const DepartmentTable = () => {
     []
   );
 
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-gray-800 flex items-center">
           Departments
         </h2>
         <Link className="btn-primary" to={"/new-department"}>
-          <FaPlus /> New Deparment
+          <FaPlus /> New Department
         </Link>
       </div>
 
-      <Table data={departmentData} columns={columns} path="department" />
+      <Table data={data || []} columns={columns} path="department" />
     </div>
   );
 };

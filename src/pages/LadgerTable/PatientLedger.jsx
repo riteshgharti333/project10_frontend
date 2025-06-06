@@ -4,8 +4,12 @@ import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { departmentData } from "../../assets/tableData";
 import { patientLedgerData } from "../../assets/ledgerData";
+import { useGetPatientLedgerEntries } from "../../feature/ledgerHook/usePatientLedger";
+import Loader from "../../components/Loader/Loader";
 
 const PatientLedger = () => {
+  const { data, error, isLoading, isError } = useGetPatientLedgerEntries();
+
   const columns = useMemo(
     () => [
       {
@@ -98,6 +102,10 @@ const PatientLedger = () => {
     []
   );
 
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -109,7 +117,7 @@ const PatientLedger = () => {
         </Link>
       </div>
 
-      <Table data={patientLedgerData} columns={columns} path="patient-ledger"/>
+      <Table data={data} columns={columns} path="patient-ledger" />
     </div>
   );
 };

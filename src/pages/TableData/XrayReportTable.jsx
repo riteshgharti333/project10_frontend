@@ -3,11 +3,15 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { billingData } from "../../assets/tableData";
+import Loader from "../../components/Loader/Loader";
+import { useGetXrayReports } from "../../feature/hooks/useXray";
 
 const XrayReportTable = () => {
   const [doctor, setDoctor] = useState("All");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+
+    const { data, error, isLoading, isError } = useGetXrayReports();
 
   const columns = useMemo(
     () => [
@@ -126,6 +130,10 @@ const XrayReportTable = () => {
     []
   );
 
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -177,9 +185,10 @@ const XrayReportTable = () => {
       </div>
 
       <Table
-        data={billingData}
+        data={data}
         columns={columns}
         filters={{ doctor, fromDate, toDate }}
+        path="xray"
       />
     </div>
   );

@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { sidebar2Data, sidebar3Data, sidebarData } from "../../assets/data";
-
 import {
   FiLogOut,
   FiChevronDown,
@@ -14,24 +13,110 @@ import { MdLocalHospital } from "react-icons/md";
 const Sidebar = React.memo(() => {
   const [collapsed, setCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState({});
-  const [activeItem, setActiveItem] = useState(0);
+  const location = useLocation();
 
-  const toggleExpand = (index) => {
+  const toggleExpand = (key) => {
     setExpandedItems((prev) => ({
       ...prev,
-      [index]: !prev[index],
+      [key]: !prev[key],
     }));
   };
 
- const handleItemClick = useCallback((key) => {
-  setActiveItem(key);
-  if (key.startsWith("main-") || key.startsWith("tran-")) {
-    setExpandedItems(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  }
-}, []);
+  const isActive = useCallback(
+    (link) => {
+      return location.pathname === link;
+    },
+    [location]
+  );
+
+  const renderMenuItems = (data, prefix) => {
+    return data.map((item, index) => {
+      const key = `${prefix}-${item.title}-${index}`;
+      const hasSubItems = item.subItems && item.subItems.length > 0;
+      const isItemActive =
+        isActive(item.link) ||
+        (hasSubItems &&
+          item.subItems.some((subItem) => isActive(subItem.link)));
+
+      return (
+        <div key={key} className="mb-1">
+          {hasSubItems ? (
+            // With subitems - clickable div for toggling
+            <div
+              className={`flex items-center p-3 rounded-lg transition-all duration-200 ${
+                collapsed ? "justify-center" : "justify-between"
+              } ${
+                isItemActive
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+              onClick={() => toggleExpand(key)}
+            >
+              <div className="flex items-center flex-1">
+                <item.icon
+                  className={
+                    isItemActive ? "text-blue-600" : "text-gray-500 shrink-0"
+                  }
+                />
+                {!collapsed && (
+                  <span className="ml-3 text-sm font-medium">{item.title}</span>
+                )}
+              </div>
+              {!collapsed && (
+                <span className="text-gray-400 text-xs ml-2">
+                  {expandedItems[key] ? <FiChevronDown /> : <FiChevronRight />}
+                </span>
+              )}
+            </div>
+          ) : (
+            // No subitems - entire div is a Link
+            <Link
+              to={item.link}
+              className={`flex items-center p-3 rounded-lg transition-all duration-200 ${
+                collapsed ? "justify-center" : "justify-between"
+              } ${
+                isItemActive
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <div className="flex items-center flex-1">
+                <item.icon
+                  className={isItemActive ? "text-blue-600" : "text-gray-500"}
+                />
+                {!collapsed && (
+                  <span className="ml-3 text-sm font-medium">{item.title}</span>
+                )}
+              </div>
+              {!collapsed && (
+                <span className="text-gray-400 text-xs ml-2 invisible">
+                  <FiChevronRight />
+                </span>
+              )}
+            </Link>
+          )}
+
+          {!collapsed && hasSubItems && expandedItems[key] && (
+            <div className="ml-8 mt-1 space-y-1 animate-fadeIn">
+              {item.subItems.map((subItem, subIndex) => (
+                <Link
+                  to={subItem.link}
+                  key={`${key}-sub-${subIndex}`}
+                  className={`block p-2 pl-4 rounded-md text-xs ${
+                    isActive(subItem.link)
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-500 hover:bg-blue-50 hover:text-blue-600"
+                  } transition-all duration-150`}
+                >
+                  {subItem.title}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    });
+  };
 
   return (
     <div
@@ -57,196 +142,24 @@ const Sidebar = React.memo(() => {
 
       {/* Navigation Items */}
       <div className="flex-1 overflow-y-auto py-4 px-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-        {sidebarData.map((item, index) => {
-          const key = `main-${index}`;
-          return (
-            <div key={key} className="mb-1">
-              <div
-                className={`flex items-center p-3 rounded-lg transition-all duration-200 cursor-pointer group
-          ${
-            activeItem === key
-              ? "bg-blue-50 text-blue-700"
-              : "text-gray-600 hover:bg-gray-50"
-          }
-          ${collapsed ? "justify-center" : "justify-between"}`}
-                onClick={() => handleItemClick(key)}
-              >
-                <div className="flex items-center">
-                  <Link
-                    to={item.link}
-                    className={`${
-                      activeItem === key ? "text-blue-600" : "text-gray-500"
-                    } group-hover:text-blue-500`}
-                  >
-                    <item.icon />
-                  </Link>
-                  {!collapsed && (
-                    <Link to={item.link} className="ml-3 text-sm font-medium">
-                      {item.title}
-                    </Link>
-                  )}
-                </div>
-                {!collapsed && item.subItems && (
-                  <span className="text-gray-400 text-xs">
-                    {expandedItems[key] ? (
-                      <FiChevronDown />
-                    ) : (
-                      <FiChevronRight />
-                    )}
-                  </span>
-                )}
-              </div>
+        {renderMenuItems(sidebarData, "main")}
 
-              {!collapsed && item.subItems && expandedItems[key] && (
-                <div className="ml-8 mt-1 space-y-1 animate-fadeIn">
-                  {item.subItems.map((subItem, subIndex) => (
-                    <Link
-                      to={subItem.link}
-                      key={subIndex}
-                      className="block p-2 pl-4 rounded-md text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-all duration-150"
-                    >
-                      {subItem.title}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {!collapsed && (
+          <h1 className="px-2 mt-3 mb-3 text-[18px] font-bold text-blue-950">
+            Transaction
+          </h1>
+        )}
+        {renderMenuItems(sidebar2Data, "tran")}
 
-        <h1
-          className={` ${
-            collapsed ? "hidden" : "block"
-          } px-2 mt-3 mb-3 text-[18px] font-bold text-blue-950`}
-        >
-          Transection
-        </h1>
-
-        {sidebar2Data.map((item, index) => {
-          const key = `tran-${index}`;
-          return (
-            <div key={key} className="mb-1">
-              <div
-                className={`flex items-center p-3 rounded-lg transition-all duration-200 cursor-pointer group
-          ${
-            activeItem === key
-              ? "bg-blue-50 text-blue-700"
-              : "text-gray-600 hover:bg-gray-50"
-          }
-          ${collapsed ? "justify-center" : "justify-between"}`}
-                onClick={() => handleItemClick(key)}
-              >
-                <div className="flex items-center">
-                  <Link
-                    to={item.link}
-                    className={`${
-                      activeItem === key ? "text-blue-600" : "text-gray-500"
-                    } group-hover:text-blue-500`}
-                  >
-                    <item.icon />
-                  </Link>
-                  {!collapsed && (
-                    <Link to={item.link} className="ml-3 text-sm font-medium">
-                      {item.title}
-                    </Link>
-                  )}
-                </div>
-                {!collapsed && item.subItems && (
-                  <span className="text-gray-400 text-xs">
-                    {expandedItems[key] ? (
-                      <FiChevronDown />
-                    ) : (
-                      <FiChevronRight />
-                    )}
-                  </span>
-                )}
-              </div>
-
-              {!collapsed && item.subItems && expandedItems[key] && (
-                <div className="ml-8 mt-1 space-y-1 animate-fadeIn">
-                  {item.subItems.map((subItem, subIndex) => (
-                    <Link
-                      to={subItem.link}
-                      key={subIndex}
-                      className="block p-2 pl-4 rounded-md text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-all duration-150"
-                    >
-                      {subItem.title}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-
-         <h1
-          className={` ${
-            collapsed ? "hidden" : "block"
-          } px-2 mt-3 mb-3 text-[18px] font-bold text-blue-950`}
-        >
-          Reports
-        </h1>
-
-        {sidebar3Data.map((item, index) => {
-          const key = `tran-${index}`;
-          return (
-            <div key={key} className="mb-1">
-              <div
-                className={`flex items-center p-3 rounded-lg transition-all duration-200 cursor-pointer group
-          ${
-            activeItem === key
-              ? "bg-blue-50 text-blue-700"
-              : "text-gray-600 hover:bg-gray-50"
-          }
-          ${collapsed ? "justify-center" : "justify-between"}`}
-                onClick={() => handleItemClick(key)}
-              >
-                <div className="flex items-center">
-                  <Link
-                    to={item.link}
-                    className={`${
-                      activeItem === key ? "text-blue-600" : "text-gray-500"
-                    } group-hover:text-blue-500`}
-                  >
-                    <item.icon />
-                  </Link>
-                  {!collapsed && (
-                    <Link to={item.link} className="ml-3 text-sm font-medium">
-                      {item.title}
-                    </Link>
-                  )}
-                </div>
-                {!collapsed && item.subItems && (
-                  <span className="text-gray-400 text-xs">
-                    {expandedItems[key] ? (
-                      <FiChevronDown />
-                    ) : (
-                      <FiChevronRight />
-                    )}
-                  </span>
-                )}
-              </div>
-
-              {!collapsed && item.subItems && expandedItems[key] && (
-                <div className="ml-8 mt-1 space-y-1 animate-fadeIn">
-                  {item.subItems.map((subItem, subIndex) => (
-                    <Link
-                      to={subItem.link}
-                      key={subIndex}
-                      className="block p-2 pl-4 rounded-md text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-all duration-150"
-                    >
-                      {subItem.title}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {!collapsed && (
+          <h1 className="px-2 mt-3 mb-3 text-[18px] font-bold text-blue-950">
+            Reports
+          </h1>
+        )}
+        {renderMenuItems(sidebar3Data, "report")}
       </div>
 
-      {/* Quick Actions (Visible when expanded) */}
+      {/* Quick Actions */}
       {!collapsed && (
         <div className="p-3 border-t border-gray-200">
           <button className="w-full flex items-center justify-center py-2 px-4 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors duration-200">
@@ -264,7 +177,7 @@ const Sidebar = React.memo(() => {
       >
         {!collapsed ? (
           <>
-            <div className="flex items-center">
+            <Link to="/profile" className="flex items-center">
               <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
                 DR
               </div>
@@ -274,15 +187,17 @@ const Sidebar = React.memo(() => {
                 </div>
                 <div className="text-xs text-gray-500">Administrator</div>
               </div>
-            </div>
-            <button className="text-gray-500 hover:text-gray-700">
+            </Link>
+            <Link to="/login" className="text-gray-500 hover:text-gray-700">
               <FiLogOut />
-            </button>
+            </Link>
           </>
         ) : (
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-            DR
-          </div>
+          <Link to="/profile">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+              DR
+            </div>
+          </Link>
         )}
       </div>
     </div>

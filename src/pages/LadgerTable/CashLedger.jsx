@@ -3,8 +3,13 @@ import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
 import { cashLedgerData, doctorLedgerData, patientLedgerData } from "../../assets/ledgerData";
+import { useGetCashLedgerEntries } from "../../feature/ledgerHook/useCashLedger";
+import Loader from "../../components/Loader/Loader";
 
 const CashLedger = () => {
+
+    const { data, error, isLoading, isError } = useGetCashLedgerEntries();
+
   const columns = useMemo(
     () => [
       {
@@ -49,6 +54,11 @@ const CashLedger = () => {
     []
   );
 
+   if (isLoading) {
+    return <Loader />;
+  }
+
+
   return (
     <div className="">
       <div className="flex justify-between items-center">
@@ -60,7 +70,7 @@ const CashLedger = () => {
         </Link>
       </div>
 
-      <Table data={cashLedgerData} columns={columns} path="cash-ledger" />
+      <Table data={data} columns={columns} path="cash-ledger" />
     </div>
   );
 };
