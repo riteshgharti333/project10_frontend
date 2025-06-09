@@ -20,10 +20,11 @@ import { useMemo } from "react";
 const Table = ({ data, columns, filters = {}, getRowProps, path }) => {
   const navigate = useNavigate();
 
-  // Filter data using useMemo
   const filteredData = useMemo(() => {
+    const safeData = Array.isArray(data) ? data : [];
     const { doctor, fromDate, toDate } = filters;
-    return data.filter((row) => {
+
+    return safeData.filter((row) => {
       const testDate = new Date(row.testDate);
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
@@ -59,7 +60,7 @@ const Table = ({ data, columns, filters = {}, getRowProps, path }) => {
         "bed-assign",
         "appointment",
         "nurse",
-        "docter",
+        "doctor",
         "pharmacist",
         "prescription",
         "ambulance",
@@ -69,8 +70,8 @@ const Table = ({ data, columns, filters = {}, getRowProps, path }) => {
         "sub-product",
         "bill",
         "money-receipt",
-        "vouchar",
-        "employee"
+        "voucher",
+        "employee",
       ].includes(path)
     ) {
       navigate(`/${path}/${id}`);
@@ -156,87 +157,126 @@ const Table = ({ data, columns, filters = {}, getRowProps, path }) => {
           </thead>
 
           <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                onClick={() => handleRowClick(row.original._id)}
-                {...(getRowProps ? getRowProps(row) : {})}
-                className={`hover:bg-blue-50 cursor-pointer transition-colors duration-150 ${
-                  getRowProps ? getRowProps(row)?.className || "" : ""
-                }`}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className="px-6 text-sm py-4 whitespace-nowrap"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  onClick={() => handleRowClick(row.original._id)}
+                  {...(getRowProps ? getRowProps(row) : {})}
+                  className={`hover:bg-blue-50 cursor-pointer transition-colors duration-150 ${
+                    getRowProps ? getRowProps(row)?.className || "" : ""
+                  }`}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="px-6 text-sm py-4 whitespace-nowrap"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr className="h-[70vh]">
+                <td
+                  colSpan={columns.length}
+                  className="px-6 py-12 text-center text-gray-500"
+                >
+                  <div className="flex flex-col items-center justify-center">
+                    <svg
+                      className="w-12 h-12 text-gray-400 mb-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <p className="text-lg font-medium">No records found</p>
+                    <p className="text-sm mt-1">
+                      Try adjusting your search or filter to find what you're
+                      looking for.
+                    </p>
+                    <p className="text-sm mt-1 text-gray-500">
+                      Also, please check your internet connection.
+                    </p>
+                  </div>
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
-      <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200 bg-gray-50">
-        <div className="hidden sm:block">
-          <p className="text-sm text-gray-700">
-            Showing{" "}
-            <span className="font-medium">
-              {table.getState().pagination.pageIndex *
-                table.getState().pagination.pageSize +
-                1}
-            </span>{" "}
-            to{" "}
-            <span className="font-medium">
-              {Math.min(
-                (table.getState().pagination.pageIndex + 1) *
-                  table.getState().pagination.pageSize,
-                filteredData.length
-              )}
-            </span>{" "}
-            of <span className="font-medium">{filteredData.length}</span>{" "}
-            results
-          </p>
-        </div>
+      {/* Pagination - Only show if there are records */}
+      {table.getRowModel().rows.length > 0 && (
+        <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200 bg-gray-50">
+          <div className="hidden sm:block">
+            <p className="text-sm text-gray-700">
+              Showing{" "}
+              <span className="font-medium">
+                {table.getState().pagination.pageIndex *
+                  table.getState().pagination.pageSize +
+                  1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(
+                  (table.getState().pagination.pageIndex + 1) *
+                    table.getState().pagination.pageSize,
+                  filteredData.length
+                )}
+              </span>{" "}
+              of <span className="font-medium">{filteredData.length}</span>{" "}
+              results
+            </p>
+          </div>
 
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FiChevronsLeft size={16} />
-          </button>
-          <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FiChevronLeft size={16} />
-          </button>
-          <span className="text-sm text-gray-700 px-2">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
-          </span>
-          <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FiChevronRight size={16} />
-          </button>
-          <button
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FiChevronsRight size={16} />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+              className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiChevronsLeft size={16} />
+            </button>
+            <button
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiChevronLeft size={16} />
+            </button>
+            <span className="text-sm text-gray-700 px-2">
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </span>
+            <button
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiChevronRight size={16} />
+            </button>
+            <button
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+              className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiChevronsRight size={16} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

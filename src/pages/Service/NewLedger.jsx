@@ -9,9 +9,137 @@ import {
   FaBuilding,
   FaFileInvoice,
   FaFileMedical,
+  FaCalendarAlt,
 } from "react-icons/fa";
-import BackButton from "../../components/BackButton/BackButton";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner"; // Assuming sonner for toasts
 
+import BackButton from "../../components/BackButton/BackButton";
+// import LoadingButton from "../../components/LoadingButton/LoadingButton";
+
+// --- Mock Component for Demonstration ---
+const LoadingButton = ({ isLoading, children, ...props }) => (
+  <button
+    {...props}
+    disabled={isLoading}
+    className="px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
+  >
+    {isLoading ? "Saving..." : children}
+  </button>
+);
+// --- End Mock Component ---
+
+// --- Zod Schemas for Each Ledger Type ---
+
+const patientLedgerSchema = z.object({
+  patientName: z.string().min(1, "Patient name is required"),
+  date: z.coerce.date(),
+  description: z.string().min(1, "Description is required"),
+  amountType: z.enum(["Debit", "Credit"]),
+  amount: z.coerce.number().positive("Amount must be a positive number"),
+  paymentMode: z.string().min(1, "Payment mode is required"),
+  transactionId: z.string().optional(),
+  remarks: z.string().optional(),
+});
+
+const doctorLedgerSchema = z.object({
+  doctorName: z.string().min(1, "Doctor name is required"),
+  date: z.coerce.date(),
+  description: z.string().min(1, "Description is required"),
+  amountType: z.enum(["Debit", "Credit"]),
+  amount: z.coerce.number().positive("Amount must be a positive number"),
+  paymentMode: z.string().min(1, "Payment mode is required"),
+  transactionId: z.string().optional(),
+  remarks: z.string().optional(),
+});
+
+const supplierLedgerSchema = z.object({
+  supplierName: z.string().min(1, "Supplier name is required"),
+  date: z.coerce.date(),
+  invoiceNo: z.string().min(1, "Invoice number is required"),
+  description: z.string().min(1, "Description is required"),
+  amountType: z.enum(["Debit", "Credit"]),
+  amount: z.coerce.number().positive("Amount must be a positive number"),
+  paymentMode: z.string().optional(),
+  transactionId: z.string().optional(),
+  billFile: z.any().optional(),
+  remarks: z.string().optional(),
+});
+
+const pharmacyLedgerSchema = z.object({
+  date: z.coerce.date(),
+  medicineName: z.string().min(1, "Medicine name/category is required"),
+  description: z.string().min(1, "Description is required"),
+  amountType: z.enum(["Debit", "Credit"]),
+  amount: z.coerce.number().positive("Amount must be a positive number"),
+  paymentMode: z.string().min(1, "Payment mode is required"),
+  remarks: z.string().optional(),
+});
+
+const labLedgerSchema = z.object({
+  patientName: z.string().min(1, "Patient name is required"),
+  date: z.coerce.date(),
+  testName: z.string().min(1, "Test name is required"),
+  description: z.string().optional(),
+  amount: z.coerce.number().positive("Amount must be a positive number"),
+  paymentMode: z.string().min(1, "Payment mode is required"),
+  reportFile: z.any().optional(),
+  remarks: z.string().optional(),
+});
+
+const cashLedgerSchema = z.object({
+  date: z.coerce.date(),
+  purpose: z.string().min(1, "Purpose is required"),
+  amountType: z.enum(["Debit", "Credit"]),
+  amount: z.coerce.number().positive("Amount must be a positive number"),
+  remarks: z.string().optional(),
+});
+
+const bankLedgerSchema = z.object({
+  bankName: z.string().min(1, "Bank name is required"),
+  date: z.coerce.date(),
+  description: z.string().min(1, "Description is required"),
+  amountType: z.enum(["Debit", "Credit"]),
+  amount: z.coerce.number().positive("Amount must be a positive number"),
+  transactionId: z.string().optional(),
+  remarks: z.string().optional(),
+});
+
+const insuranceLedgerSchema = z.object({
+  patientName: z.string().min(1, "Patient name is required"),
+  tpaCompany: z.string().min(1, "TPA/Insurance Company is required"),
+  claimAmount: z.coerce.number().positive("Claim amount must be positive"),
+  approvedAmount: z.coerce.number().min(0).optional(),
+  settledAmount: z.coerce.number().min(0).optional(),
+  status: z.enum(["Pending", "Approved", "Rejected"]),
+  remarks: z.string().optional(),
+});
+
+const expenseLedgerSchema = z.object({
+  expenseCategory: z.string().min(1, "Expense category is required"),
+  date: z.coerce.date(),
+  description: z.string().min(1, "Description is required"),
+  amount: z.coerce.number().positive("Amount must be a positive number"),
+  paymentMode: z.string().min(1, "Payment mode is required"),
+  transactionId: z.string().optional(),
+  remarks: z.string().optional(),
+});
+
+const schemas = {
+  Patient: patientLedgerSchema,
+  Doctor: doctorLedgerSchema,
+  Supplier: supplierLedgerSchema,
+  Pharmacy: pharmacyLedgerSchema,
+  Lab: labLedgerSchema,
+  Cash: cashLedgerSchema,
+  Bank: bankLedgerSchema,
+  Insurance: insuranceLedgerSchema,
+  Expense: expenseLedgerSchema,
+};
+
+// --- Main Component ---
 const NewLedger = () => {
   const [selectedLedger, setSelectedLedger] = useState("Patient");
 
@@ -26,6 +154,31 @@ const NewLedger = () => {
     { value: "Insurance", label: "Insurance Ledger", icon: <FaFileMedical /> },
     { value: "Expense", label: "Expense Ledger", icon: <FaFileInvoice /> },
   ];
+
+  const renderForm = () => {
+    switch (selectedLedger) {
+      case "Patient":
+        return <PatientLedgerForm key={selectedLedger} />;
+      case "Doctor":
+        return <DoctorLedgerForm key={selectedLedger} />;
+      case "Supplier":
+        return <SupplierLedgerForm key={selectedLedger} />;
+      case "Pharmacy":
+        return <PharmacyLedgerForm key={selectedLedger} />;
+      case "Lab":
+        return <LabLedgerForm key={selectedLedger} />;
+      case "Cash":
+        return <CashLedgerForm key={selectedLedger} />;
+      case "Bank":
+        return <BankLedgerForm key={selectedLedger} />;
+      case "Insurance":
+        return <InsuranceLedgerForm key={selectedLedger} />;
+      case "Expense":
+        return <ExpenseLedgerForm key={selectedLedger} />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="mx-auto">
@@ -46,43 +199,123 @@ const NewLedger = () => {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Ledger Type
-          <span className="text-red-500 ml-1">*</span>
+          Ledger Type<span className="text-red-500 ml-1">*</span>
         </label>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {ledgerTypes.map((ledger) => (
             <button
               key={ledger.value}
               onClick={() => setSelectedLedger(ledger.value)}
-              className={`flex items-center cursor-pointer p-4 border rounded-lg transition-colors ${
+              className={`flex items-center justify-center text-center cursor-pointer p-4 border rounded-lg transition-colors ${
                 selectedLedger === ledger.value
-                  ? "border-blue-500 bg-blue-50 text-blue-700"
+                  ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold"
                   : "border-gray-300 hover:bg-gray-50"
               }`}
             >
-              <span className="mr-2">{ledger.icon}</span>
+              <span className="mr-3 text-lg">{ledger.icon}</span>
               {ledger.label}
             </button>
           ))}
         </div>
       </div>
 
-      {selectedLedger === "Patient" && <PatientLedgerForm />}
-      {selectedLedger === "Doctor" && <DoctorLedgerForm />}
-      {selectedLedger === "Supplier" && <SupplierLedgerForm />}
-      {selectedLedger === "Pharmacy" && <PharmacyLedgerForm />}
-      {selectedLedger === "Lab" && <LabLedgerForm />}
-      {selectedLedger === "Cash" && <CashLedgerForm />}
-      {selectedLedger === "Bank" && <BankLedgerForm />}
-      {selectedLedger === "Insurance" && <InsuranceLedgerForm />}
-      {selectedLedger === "Expense" && <ExpenseLedgerForm />}
+      {renderForm()}
     </div>
   );
 };
 
-// Patient Ledger Form
+// --- Child Form Components ---
+
 const PatientLedgerForm = () => {
-  const [formData, setFormData] = useState({
+  return (
+    <BaseLedgerForm schema={schemas.Patient} formConfig={patientFormConfig} />
+  );
+};
+const DoctorLedgerForm = () => {
+  return (
+    <BaseLedgerForm schema={schemas.Doctor} formConfig={doctorFormConfig} />
+  );
+};
+const SupplierLedgerForm = () => {
+  return (
+    <BaseLedgerForm schema={schemas.Supplier} formConfig={supplierFormConfig} />
+  );
+};
+const PharmacyLedgerForm = () => {
+  return (
+    <BaseLedgerForm schema={schemas.Pharmacy} formConfig={pharmacyFormConfig} />
+  );
+};
+const LabLedgerForm = () => {
+  return <BaseLedgerForm schema={schemas.Lab} formConfig={labFormConfig} />;
+};
+const CashLedgerForm = () => {
+  return <BaseLedgerForm schema={schemas.Cash} formConfig={cashFormConfig} />;
+};
+const BankLedgerForm = () => {
+  return <BaseLedgerForm schema={schemas.Bank} formConfig={bankFormConfig} />;
+};
+const InsuranceLedgerForm = () => {
+  return (
+    <BaseLedgerForm
+      schema={schemas.Insurance}
+      formConfig={insuranceFormConfig}
+    />
+  );
+};
+const ExpenseLedgerForm = () => {
+  return (
+    <BaseLedgerForm schema={schemas.Expense} formConfig={expenseFormConfig} />
+  );
+};
+
+// --- Form Configurations ---
+// (Moved outside components for clarity)
+
+const patientFormConfig = {
+  formTitle: "Patient Ledger",
+  formIcon: <FaUser />,
+  fields: [
+    {
+      name: "patientName",
+      label: "Patient Name",
+      type: "text",
+      icon: <FaUser />,
+      required: true,
+    },
+    {
+      name: "date",
+      label: "Date",
+      type: "date",
+      icon: <FaCalendarAlt />,
+      required: true,
+    },
+    {
+      name: "description",
+      label: "Description",
+      type: "text",
+      placeholder: "X-ray, OPD fees etc.",
+      required: true,
+    },
+    {
+      name: "amountType",
+      label: "Amount Type",
+      type: "select",
+      options: ["Debit", "Credit"],
+      required: true,
+    },
+    { name: "amount", label: "Amount", type: "number", required: true },
+    {
+      name: "paymentMode",
+      label: "Payment Mode",
+      type: "select",
+      options: ["Cash", "Card", "UPI", "Insurance"],
+      required: true,
+    },
+    { name: "transactionId", label: "Transaction ID", type: "text" },
+    { name: "remarks", label: "Remarks", type: "textarea" },
+  ],
+  defaultValues: {
     patientName: "",
     date: new Date().toISOString().split("T")[0],
     description: "",
@@ -91,55 +324,47 @@ const PatientLedgerForm = () => {
     paymentMode: "Cash",
     transactionId: "",
     remarks: "",
-  });
-
-  return (
-    <LedgerForm
-      formData={formData}
-      setFormData={setFormData}
-      fields={[
-        {
-          name: "patientName",
-          label: "Patient Name",
-          type: "text",
-          icon: <FaUser />,
-          required: true,
-        },
-        { name: "date", label: "Date", type: "date", required: true },
-        {
-          name: "description",
-          label: "Description",
-          type: "text",
-          placeholder: "X-ray, OPD fees etc.",
-          required: true,
-        },
-        {
-          name: "amountType",
-          label: "Amount Type",
-          type: "select",
-          options: ["Debit", "Credit"],
-          required: true,
-        },
-        { name: "amount", label: "Amount", type: "number", required: true },
-        {
-          name: "paymentMode",
-          label: "Payment Mode",
-          type: "select",
-          options: ["Cash", "Card", "UPI", "Insurance"],
-          required: true,
-        },
-        { name: "transactionId", label: "Transaction ID", type: "text" },
-        { name: "remarks", label: "Remarks", type: "textarea" },
-      ]}
-      formTitle="Patient Ledger"
-      formIcon={<FaUser />}
-    />
-  );
+  },
 };
 
-// Doctor Ledger Form
-const DoctorLedgerForm = () => {
-  const [formData, setFormData] = useState({
+const doctorFormConfig = {
+  formTitle: "Doctor Ledger",
+  formIcon: <FaUserMd />,
+  fields: [
+    {
+      name: "doctorName",
+      label: "Doctor Name",
+      type: "text",
+      icon: <FaUserMd />,
+      required: true,
+    },
+    { name: "date", label: "Date", type: "date", required: true },
+    {
+      name: "description",
+      label: "Description",
+      type: "text",
+      placeholder: "Consultation share, Salary payment etc.",
+      required: true,
+    },
+    {
+      name: "amountType",
+      label: "Amount Type",
+      type: "select",
+      options: ["Debit", "Credit"],
+      required: true,
+    },
+    { name: "amount", label: "Amount", type: "number", required: true },
+    {
+      name: "paymentMode",
+      label: "Payment Mode",
+      type: "select",
+      options: ["Bank", "UPI", "Cash"],
+      required: true,
+    },
+    { name: "transactionId", label: "Transaction ID", type: "text" },
+    { name: "remarks", label: "Remarks", type: "textarea" },
+  ],
+  defaultValues: {
     doctorName: "",
     date: new Date().toISOString().split("T")[0],
     description: "",
@@ -148,60 +373,48 @@ const DoctorLedgerForm = () => {
     paymentMode: "Bank",
     transactionId: "",
     remarks: "",
-  });
-
-  return (
-    <LedgerForm
-      formData={formData}
-      setFormData={setFormData}
-      fields={[
-        {
-          name: "doctorName",
-          label: "Doctor Name",
-          type: "text",
-          icon: <FaUserMd />,
-          required: true,
-        },
-        { name: "date", label: "Date", type: "date", required: true },
-        {
-          name: "description",
-          label: "Description",
-          type: "text",
-          placeholder: "Consultation share, Salary payment etc.",
-          required: true,
-        },
-        {
-          name: "amountType",
-          label: "Amount Type",
-          type: "select",
-          options: ["Debit", "Credit"],
-          required: true,
-        },
-        { name: "amount", label: "Amount", type: "number", required: true },
-        {
-          name: "paymentMode",
-          label: "Payment Mode",
-          type: "select",
-          options: ["Bank", "UPI", "Cash"],
-          required: true,
-        },
-        {
-          name: "transactionId",
-          label: "Transaction ID",
-          type: "text",
-          required: true,
-        },
-        { name: "remarks", label: "Remarks", type: "textarea" },
-      ]}
-      formTitle="Doctor Ledger"
-      formIcon={<FaUserMd />}
-    />
-  );
+  },
 };
 
-// Supplier Ledger Form
-const SupplierLedgerForm = () => {
-  const [formData, setFormData] = useState({
+const supplierFormConfig = {
+  formTitle: "Supplier Ledger",
+  formIcon: <FaTruck />,
+  fields: [
+    {
+      name: "supplierName",
+      label: "Supplier Name",
+      type: "text",
+      icon: <FaTruck />,
+      required: true,
+    },
+    { name: "date", label: "Date", type: "date", required: true },
+    { name: "invoiceNo", label: "Invoice No.", type: "text", required: true },
+    {
+      name: "description",
+      label: "Description",
+      type: "text",
+      placeholder: "Gloves order, Medicine refund etc.",
+      required: true,
+    },
+    {
+      name: "amountType",
+      label: "Amount Type",
+      type: "select",
+      options: ["Debit", "Credit"],
+      required: true,
+    },
+    { name: "amount", label: "Amount", type: "number", required: true },
+    {
+      name: "paymentMode",
+      label: "Payment Mode",
+      type: "select",
+      options: ["Bank", "UPI", "Cheque", "Cash"],
+    },
+    { name: "transactionId", label: "Transaction ID", type: "text" },
+    { name: "billFile", label: "Attach Bill", type: "file" },
+    { name: "remarks", label: "Remarks", type: "textarea" },
+  ],
+  defaultValues: {
     supplierName: "",
     date: new Date().toISOString().split("T")[0],
     invoiceNo: "",
@@ -212,62 +425,46 @@ const SupplierLedgerForm = () => {
     transactionId: "",
     billFile: null,
     remarks: "",
-  });
-
-  return (
-    <LedgerForm
-      formData={formData}
-      setFormData={setFormData}
-      fields={[
-        {
-          name: "supplierName",
-          label: "Supplier Name",
-          type: "text",
-          icon: <FaTruck />,
-          required: true,
-        },
-        { name: "date", label: "Date", type: "date", required: true },
-        {
-          name: "invoiceNo",
-          label: "Invoice No.",
-          type: "text",
-          required: true,
-        },
-        {
-          name: "description",
-          label: "Description",
-          type: "text",
-          placeholder: "Gloves order, Medicine refund etc.",
-          required: true,
-        },
-        {
-          name: "amountType",
-          label: "Amount Type",
-          type: "select",
-          options: ["Debit", "Credit"],
-          required: true,
-        },
-        { name: "amount", label: "Amount", type: "number", required: true },
-        {
-          name: "paymentMode",
-          label: "Payment Mode",
-          type: "select",
-          options: ["Bank", "UPI", "Cheque", "Cash"],
-          required: true,
-        },
-        { name: "transactionId", label: "Transaction ID", type: "text" },
-        { name: "billFile", label: "Attach Bill", type: "file" },
-        { name: "remarks", label: "Remarks", type: "textarea" },
-      ]}
-      formTitle="Supplier Ledger"
-      formIcon={<FaTruck />}
-    />
-  );
+  },
 };
 
-// Pharmacy Ledger Form
-const PharmacyLedgerForm = () => {
-  const [formData, setFormData] = useState({
+const pharmacyFormConfig = {
+  formTitle: "Pharmacy Ledger",
+  formIcon: <FaPills />,
+  fields: [
+    { name: "date", label: "Date", type: "date", required: true },
+    {
+      name: "medicineName",
+      label: "Medicine Name/Category",
+      type: "text",
+      icon: <FaPills />,
+      required: true,
+    },
+    {
+      name: "description",
+      label: "Description",
+      type: "text",
+      placeholder: "Patient sale, Restocking etc.",
+      required: true,
+    },
+    {
+      name: "amountType",
+      label: "Amount Type",
+      type: "select",
+      options: ["Debit", "Credit"],
+      required: true,
+    },
+    { name: "amount", label: "Amount", type: "number", required: true },
+    {
+      name: "paymentMode",
+      label: "Payment Mode",
+      type: "select",
+      options: ["Cash", "Card", "UPI"],
+      required: true,
+    },
+    { name: "remarks", label: "Remarks", type: "textarea" },
+  ],
+  defaultValues: {
     date: new Date().toISOString().split("T")[0],
     medicineName: "",
     description: "",
@@ -275,53 +472,40 @@ const PharmacyLedgerForm = () => {
     amount: "",
     paymentMode: "Cash",
     remarks: "",
-  });
-
-  return (
-    <LedgerForm
-      formData={formData}
-      setFormData={setFormData}
-      fields={[
-        { name: "date", label: "Date", type: "date", required: true },
-        {
-          name: "medicineName",
-          label: "Medicine Name/Category",
-          type: "text",
-          icon: <FaPills />,
-        },
-        {
-          name: "description",
-          label: "Description",
-          type: "text",
-          placeholder: "Patient sale, Restocking etc.",
-          required: true,
-        },
-        {
-          name: "amountType",
-          label: "Amount Type",
-          type: "select",
-          options: ["Debit", "Credit"],
-          required: true,
-        },
-        { name: "amount", label: "Amount", type: "number", required: true },
-        {
-          name: "paymentMode",
-          label: "Payment Mode",
-          type: "select",
-          options: ["Cash", "Card", "UPI"],
-          required: true,
-        },
-        { name: "remarks", label: "Remarks", type: "textarea" },
-      ]}
-      formTitle="Pharmacy Ledger"
-      formIcon={<FaPills />}
-    />
-  );
+  },
 };
 
-// Lab Ledger Form
-const LabLedgerForm = () => {
-  const [formData, setFormData] = useState({
+const labFormConfig = {
+  formTitle: "Lab/Diagnostics Ledger",
+  formIcon: <FaFlask />,
+  fields: [
+    {
+      name: "patientName",
+      label: "Patient Name",
+      type: "text",
+      icon: <FaUser />,
+      required: true,
+    },
+    { name: "date", label: "Date", type: "date", required: true },
+    { name: "testName", label: "Test Name", type: "text", required: true },
+    {
+      name: "description",
+      label: "Description",
+      type: "text",
+      placeholder: "MRI, X-Ray, Blood test etc.",
+    },
+    { name: "amount", label: "Amount", type: "number", required: true },
+    {
+      name: "paymentMode",
+      label: "Payment Mode",
+      type: "select",
+      options: ["Cash", "Card", "UPI", "Insurance"],
+      required: true,
+    },
+    { name: "reportFile", label: "Attach Report", type: "file" },
+    { name: "remarks", label: "Remarks", type: "textarea" },
+  ],
+  defaultValues: {
     patientName: "",
     date: new Date().toISOString().split("T")[0],
     testName: "",
@@ -330,87 +514,65 @@ const LabLedgerForm = () => {
     paymentMode: "Cash",
     reportFile: null,
     remarks: "",
-  });
-
-  return (
-    <LedgerForm
-      formData={formData}
-      setFormData={setFormData}
-      fields={[
-        {
-          name: "patientName",
-          label: "Patient Name",
-          type: "text",
-          icon: <FaUser />,
-          required: true,
-        },
-        { name: "date", label: "Date", type: "date", required: true },
-        { name: "testName", label: "Test Name", type: "text", required: true },
-        {
-          name: "description",
-          label: "Description",
-          type: "text",
-          placeholder: "MRI, X-Ray, Blood test etc.",
-        },
-        { name: "amount", label: "Amount", type: "number", required: true },
-        {
-          name: "paymentMode",
-          label: "Payment Mode",
-          type: "select",
-          options: ["Cash", "Card", "UPI", "Insurance"],
-          required: true,
-        },
-        { name: "reportFile", label: "Attach Report", type: "file" },
-        { name: "remarks", label: "Remarks", type: "textarea" },
-      ]}
-      formTitle="Lab/Diagnostics Ledger"
-      formIcon={<FaFlask />}
-    />
-  );
+  },
 };
 
-// Cash Ledger Form
-const CashLedgerForm = () => {
-  const [formData, setFormData] = useState({
+const cashFormConfig = {
+  formTitle: "Cash Ledger",
+  formIcon: <FaMoneyBillAlt />,
+  fields: [
+    { name: "date", label: "Date", type: "date", required: true },
+    {
+      name: "purpose",
+      label: "Purpose",
+      type: "text",
+      placeholder: "Cash received from OPD, Cash expense etc.",
+      required: true,
+    },
+    {
+      name: "amountType",
+      label: "Amount Type",
+      type: "select",
+      options: ["Debit", "Credit"],
+      required: true,
+    },
+    { name: "amount", label: "Amount", type: "number", required: true },
+    { name: "remarks", label: "Remarks", type: "textarea" },
+  ],
+  defaultValues: {
     date: new Date().toISOString().split("T")[0],
     purpose: "",
     amountType: "Debit",
     amount: "",
     remarks: "",
-  });
-
-  return (
-    <LedgerForm
-      formData={formData}
-      setFormData={setFormData}
-      fields={[
-        { name: "date", label: "Date", type: "date", required: true },
-        {
-          name: "purpose",
-          label: "Purpose",
-          type: "text",
-          placeholder: "Cash received from OPD, Cash expense etc.",
-          required: true,
-        },
-        {
-          name: "amountType",
-          label: "Amount Type",
-          type: "select",
-          options: ["Debit", "Credit"],
-          required: true,
-        },
-        { name: "amount", label: "Amount", type: "number", required: true },
-        { name: "remarks", label: "Remarks", type: "textarea" },
-      ]}
-      formTitle="Cash Ledger"
-      formIcon={<FaMoneyBillAlt />}
-    />
-  );
+  },
 };
 
-// Bank Ledger Form
-const BankLedgerForm = () => {
-  const [formData, setFormData] = useState({
+const bankFormConfig = {
+  formTitle: "Bank Ledger",
+  formIcon: <FaBuilding />,
+  fields: [
+    { name: "bankName", label: "Bank Name", type: "text", required: true },
+    { name: "date", label: "Date", type: "date", required: true },
+    {
+      name: "description",
+      label: "Description",
+      type: "text",
+      placeholder: "Doctor payment, Supplier payment etc.",
+      required: true,
+    },
+    {
+      name: "amountType",
+      label: "Amount Type",
+      type: "select",
+      options: ["Debit", "Credit"],
+      required: true,
+    },
+    { name: "amount", label: "Amount", type: "number", required: true },
+    { name: "transactionId", label: "Transaction ID", type: "text" },
+    { name: "remarks", label: "Remarks", type: "textarea" },
+  ],
+  defaultValues: {
     bankName: "",
     date: new Date().toISOString().split("T")[0],
     description: "",
@@ -418,47 +580,44 @@ const BankLedgerForm = () => {
     amount: "",
     transactionId: "",
     remarks: "",
-  });
-
-  return (
-    <LedgerForm
-      formData={formData}
-      setFormData={setFormData}
-      fields={[
-        { name: "bankName", label: "Bank Name", type: "text", required: true },
-        { name: "date", label: "Date", type: "date", required: true },
-        {
-          name: "description",
-          label: "Description",
-          type: "text",
-          placeholder: "Doctor payment, Supplier payment etc.",
-          required: true,
-        },
-        {
-          name: "amountType",
-          label: "Amount Type",
-          type: "select",
-          options: ["Debit", "Credit"],
-          required: true,
-        },
-        { name: "amount", label: "Amount", type: "number", required: true },
-        {
-          name: "transactionId",
-          label: "Transaction ID",
-          type: "text",
-          required: true,
-        },
-        { name: "remarks", label: "Remarks", type: "textarea" },
-      ]}
-      formTitle="Bank Ledger"
-      formIcon={<FaBuilding />}
-    />
-  );
+  },
 };
 
-// Insurance Ledger Form
-const InsuranceLedgerForm = () => {
-  const [formData, setFormData] = useState({
+const insuranceFormConfig = {
+  formTitle: "Insurance/TPA Ledger",
+  formIcon: <FaFileMedical />,
+  fields: [
+    {
+      name: "patientName",
+      label: "Patient Name",
+      type: "text",
+      icon: <FaUser />,
+      required: true,
+    },
+    {
+      name: "tpaCompany",
+      label: "TPA/Insurance Company",
+      type: "text",
+      required: true,
+    },
+    {
+      name: "claimAmount",
+      label: "Claim Amount",
+      type: "number",
+      required: true,
+    },
+    { name: "approvedAmount", label: "Approved Amount", type: "number" },
+    { name: "settledAmount", label: "Settled Amount", type: "number" },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      options: ["Pending", "Approved", "Rejected"],
+      required: true,
+    },
+    { name: "remarks", label: "Remarks", type: "textarea" },
+  ],
+  defaultValues: {
     patientName: "",
     tpaCompany: "",
     claimAmount: "",
@@ -466,52 +625,48 @@ const InsuranceLedgerForm = () => {
     settledAmount: "",
     status: "Pending",
     remarks: "",
-  });
-
-  return (
-    <LedgerForm
-      formData={formData}
-      setFormData={setFormData}
-      fields={[
-        {
-          name: "patientName",
-          label: "Patient Name",
-          type: "text",
-          icon: <FaUser />,
-          required: true,
-        },
-        {
-          name: "tpaCompany",
-          label: "TPA/Insurance Company",
-          type: "text",
-          required: true,
-        },
-        {
-          name: "claimAmount",
-          label: "Claim Amount",
-          type: "number",
-          required: true,
-        },
-        { name: "approvedAmount", label: "Approved Amount", type: "number" },
-        { name: "settledAmount", label: "Settled Amount", type: "number" },
-        {
-          name: "status",
-          label: "Status",
-          type: "select",
-          options: ["Pending", "Approved", "Rejected"],
-          required: true,
-        },
-        { name: "remarks", label: "Remarks", type: "textarea" },
-      ]}
-      formTitle="Insurance/TPA Ledger"
-      formIcon={<FaFileMedical />}
-    />
-  );
+  },
 };
 
-// Expense Ledger Form
-const ExpenseLedgerForm = () => {
-  const [formData, setFormData] = useState({
+const expenseFormConfig = {
+  formTitle: "General Expense Ledger",
+  formIcon: <FaFileInvoice />,
+  fields: [
+    {
+      name: "expenseCategory",
+      label: "Expense Category",
+      type: "select",
+      options: [
+        "Utilities",
+        "Salaries",
+        "Maintenance",
+        "Office Supplies",
+        "Medical Supplies",
+        "Rent",
+        "Others",
+      ],
+      required: true,
+    },
+    { name: "date", label: "Date", type: "date", required: true },
+    {
+      name: "description",
+      label: "Description",
+      type: "text",
+      placeholder: "Electricity bill for May etc.",
+      required: true,
+    },
+    { name: "amount", label: "Amount", type: "number", required: true },
+    {
+      name: "paymentMode",
+      label: "Payment Mode",
+      type: "select",
+      options: ["Cash", "Bank", "UPI", "Cheque"],
+      required: true,
+    },
+    { name: "transactionId", label: "Transaction ID", type: "text" },
+    { name: "remarks", label: "Remarks", type: "textarea" },
+  ],
+  defaultValues: {
     expenseCategory: "",
     date: new Date().toISOString().split("T")[0],
     description: "",
@@ -519,81 +674,59 @@ const ExpenseLedgerForm = () => {
     paymentMode: "Cash",
     transactionId: "",
     remarks: "",
+  },
+};
+
+// --- The Reusable Base Form Component ---
+const BaseLedgerForm = ({ schema, formConfig }) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: formConfig.defaultValues,
   });
 
-  const expenseCategories = [
-    "Utilities",
-    "Salaries",
-    "Maintenance",
-    "Office Supplies",
-    "Medical Supplies",
-    "Rent",
-    "Others",
-  ];
+  const onSubmit = (data) => {
+    console.log(`Submitting ${formConfig.formTitle}:`, data);
+    toast.success(`${formConfig.formTitle} entry saved successfully!`);
+    // Here you would call your API mutation
+    // e.g., await createLedgerEntry(data);
+  };
 
   return (
-    <LedgerForm
-      formData={formData}
-      setFormData={setFormData}
-      fields={[
-        {
-          name: "expenseCategory",
-          label: "Expense Category",
-          type: "select",
-          options: expenseCategories,
-          required: true,
-        },
-        { name: "date", label: "Date", type: "date", required: true },
-        {
-          name: "description",
-          label: "Description",
-          type: "text",
-          placeholder: "Electricity bill for May etc.",
-          required: true,
-        },
-        { name: "amount", label: "Amount", type: "number", required: true },
-        {
-          name: "paymentMode",
-          label: "Payment Mode",
-          type: "select",
-          options: ["Cash", "Bank", "UPI", "Cheque"],
-          required: true,
-        },
-        { name: "transactionId", label: "Transaction ID", type: "text" },
-        { name: "remarks", label: "Remarks", type: "textarea" },
-      ]}
-      formTitle="General Expense Ledger"
-      formIcon={<FaFileInvoice />}
+    <LedgerFormUI
+      fields={formConfig.fields}
+      formTitle={formConfig.formTitle}
+      formIcon={formConfig.formIcon}
+      // Pass react-hook-form props down
+      register={register}
+      errors={errors}
+      onSubmit={handleSubmit(onSubmit)}
+      isSubmitting={isSubmitting}
     />
   );
 };
 
-// Reusable Ledger Form Component
-const LedgerForm = ({ formData, setFormData, fields, formTitle, formIcon }) => {
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleFileChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.files[0],
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Add form submission logic here
-  };
+// --- Reusable UI Component (Almost unchanged, but now stateless) ---
+const LedgerFormUI = ({
+  fields,
+  formTitle,
+  formIcon,
+  register,
+  errors,
+  onSubmit,
+  isSubmitting,
+}) => {
+  const getInputClass = (fieldName) =>
+    `block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+      errors[fieldName] ? "border-red-500" : "border-gray-300"
+    }`;
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={onSubmit}
       className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8"
     >
       <div className="p-6">
@@ -603,11 +736,10 @@ const LedgerForm = ({ formData, setFormData, fields, formTitle, formIcon }) => {
             {formTitle}
           </h3>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {fields.map((field, index) => (
+          {fields.map((field) => (
             <div
-              key={index}
+              key={field.name}
               className={`space-y-1 ${
                 field.type === "textarea" ? "md:col-span-2" : ""
               }`}
@@ -618,65 +750,41 @@ const LedgerForm = ({ formData, setFormData, fields, formTitle, formIcon }) => {
               </label>
 
               {field.type === "select" ? (
-                <div className="relative">
-                  <select
-                    name={field.name}
-                    value={formData[field.name]}
-                    onChange={handleChange}
-                    className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8"
-                    required={field.required}
-                  >
-                    <option value="">Select {field.label}</option>
-                    {field.options.map((option, i) => (
-                      <option key={i} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg
-                      className="h-5 w-5 text-gray-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                </div>
+                <select
+                  {...register(field.name)}
+                  className={`${getInputClass(
+                    field.name
+                  )} appearance-none bg-white pr-8`}
+                >
+                  <option value="">Select {field.label}</option>
+                  {field.options.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
               ) : field.type === "textarea" ? (
                 <textarea
-                  name={field.name}
-                  value={formData[field.name]}
-                  onChange={handleChange}
+                  {...register(field.name)}
                   placeholder={field.placeholder}
                   rows="3"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  required={field.required}
+                  className={getInputClass(field.name)}
                 />
               ) : field.type === "file" ? (
                 <input
                   type="file"
-                  name={field.name}
-                  onChange={handleFileChange}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  {...register(field.name)}
+                  className={getInputClass(field.name)}
                 />
               ) : (
                 <div className="relative">
                   <input
                     type={field.type}
-                    name={field.name}
-                    value={formData[field.name]}
-                    onChange={handleChange}
+                    {...register(field.name)}
                     placeholder={field.placeholder}
-                    className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`${getInputClass(field.name)} ${
                       field.icon ? "pl-10" : ""
                     }`}
-                    required={field.required}
                   />
                   {field.icon && (
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -684,6 +792,11 @@ const LedgerForm = ({ formData, setFormData, fields, formTitle, formIcon }) => {
                     </div>
                   )}
                 </div>
+              )}
+              {errors[field.name] && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors[field.name].message}
+                </p>
               )}
             </div>
           ))}
@@ -697,12 +810,9 @@ const LedgerForm = ({ formData, setFormData, fields, formTitle, formIcon }) => {
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          className="px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
+        <LoadingButton type="submit" isLoading={isSubmitting}>
           Save Ledger
-        </button>
+        </LoadingButton>
       </div>
     </form>
   );

@@ -10,7 +10,7 @@ export const getBirthRecordByIdAPI = (id) =>
   axiosInstance.get(`/birth/${id}`);
 
 export const updateBirthRecordAPI = (id, data) =>
-  axiosInstance.patch(`/birth/${id}`, data); // PATCH because your route uses patch
+  axiosInstance.patch(`/birth/${id}`, data);
 
 export const deleteBirthRecordAPI = (id) =>
   axiosInstance.delete(`/birth/${id}`);

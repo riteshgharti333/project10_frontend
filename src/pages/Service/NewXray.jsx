@@ -1,36 +1,75 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import {
   FaCalendarAlt,
   FaUser,
   FaUserMd,
   FaFileAlt,
-  FaVenusMars,
   FaMoneyBillAlt,
 } from "react-icons/fa";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
 import BackButton from "../../components/BackButton/BackButton";
+import LoadingButton from "../../components/LoadingButton/LoadingButton";
+
+const xrayReportSchema = z.object({
+  billDate: z.string().min(1, "Bill date is required"),
+  patientMobile: z
+    .string()
+    .min(10, "A valid 10-digit mobile number is required"),
+  patientName: z.string().min(1, "Patient name is required"),
+  patientSex: z.enum(["Male", "Female", "Other"], {
+    errorMap: () => ({ message: "Please select a gender." }),
+  }),
+  age: z.coerce
+    .number()
+    .int()
+    .min(0, "Age cannot be negative")
+    .max(120, "Please enter a valid age"),
+  referredDoctor: z.string().min(1, "Referred doctor is required"),
+  testDate: z.string().min(1, "Test date is required"),
+  reportDate: z.string().optional(),
+  patientAddress: z.string().optional(),
+  examDescription: z.string().min(1, "Exam description is required"),
+  department: z.string().min(1, "Department must be selected"),
+  billAmount: z.coerce
+    .number()
+    .positive("Bill amount must be a positive number"),
+  discount: z.coerce
+    .number()
+    .min(0, "Discount cannot be negative")
+    .max(100, "Discount cannot exceed 100%")
+    .default(0),
+  netBillAmount: z.coerce.number(),
+  commissionPercent: z.coerce
+    .number()
+    .min(0, "Commission cannot be negative")
+    .max(100, "Commission cannot exceed 100%")
+    .default(0),
+  doctorEarning: z.coerce.number(),
+});
+
+const useCreateXrayReport = () => {
+  const [isPending, setIsPending] = React.useState(false);
+  const mutateAsync = (data) => {
+    setIsPending(true);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        setIsPending(false);
+        console.log("Submitting X-ray Report Data:", data);
+        resolve({
+          success: true,
+          message: "X-ray report created successfully!",
+          data: { id: `XRAY-${Date.now()}`, ...data },
+        });
+      }, 1500);
+    });
+  };
+  return { mutateAsync, isPending };
+};
 
 const NewXray = () => {
-  const today = new Date().toISOString().split("T")[0];
-
-  const [formData, setFormData] = useState({
-    billDate: today,
-    patientMobile: "",
-    patientName: "",
-    patientAddress: "",
-    referredDoctor: "",
-    testDate: "",
-    reportDate: "",
-    age: "",
-    patientSex: "Male",
-    examDescription: "",
-    department: "",
-    billAmount: "",
-    discount: "0",
-    netBillAmount: "",
-    doctorEarning: "",
-    commissionPercent: "",
-  });
-
   const departments = [
     "Radiology",
     "Cardiology",
@@ -38,51 +77,77 @@ const NewXray = () => {
     "Orthopedics",
     "General",
   ];
+  const today = new Date().toISOString().split("T")[0];
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(xrayReportSchema),
+    defaultValues: {
+      billDate: today,
+      patientMobile: "",
+      patientName: "",
+      patientSex: "Male",
+      age: "",
+      referredDoctor: "",
+      testDate: "",
+      reportDate: "",
+      patientAddress: "",
+      examDescription: "",
+      department: "",
+      billAmount: "",
+      discount: 0,
+      netBillAmount: 0,
+      commissionPercent: 0,
+      doctorEarning: 0,
+    },
+  });
 
-    // Calculate net bill amount when bill amount or discount changes
-    if (name === "billAmount" || name === "discount") {
-      const bill = parseFloat(formData.billAmount) || 0;
-      const discount = parseFloat(formData.discount) || 0;
-      const netAmount = bill - (bill * discount) / 100;
-      setFormData((prev) => ({
-        ...prev,
-        netBillAmount: netAmount.toFixed(2),
-        doctorEarning: (
-          (netAmount * (parseFloat(prev.commissionPercent) || 0)) /
-          100
-        ).toFixed(2),
-      }));
+  const [billAmount, discount, commissionPercent, netBillAmount] = watch([
+    "billAmount",
+    "discount",
+    "commissionPercent",
+    "netBillAmount",
+  ]);
+
+  useEffect(() => {
+    const bill = parseFloat(billAmount) || 0;
+    const disc = parseFloat(discount) || 0;
+    const netAmount = bill - (bill * disc) / 100;
+    setValue("netBillAmount", netAmount.toFixed(2));
+  }, [billAmount, discount, setValue]);
+
+  useEffect(() => {
+    const netAmount = parseFloat(netBillAmount) || 0;
+    const commission = parseFloat(commissionPercent) || 0;
+    const earning = (netAmount * commission) / 100;
+    setValue("doctorEarning", earning.toFixed(2));
+  }, [netBillAmount, commissionPercent, setValue]);
+
+  const { mutateAsync, isPending } = useCreateXrayReport();
+
+  const onSubmit = async (data) => {
+    try {
+      const response = await mutateAsync(data);
+      if (response.success) {
+        toast.success(response.message);
+        reset();
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Failed to save report");
     }
-
-    // Calculate doctor earning when commission percent changes
-    if (name === "commissionPercent") {
-      const netAmount = parseFloat(formData.netBillAmount) || 0;
-      setFormData((prev) => ({
-        ...prev,
-        doctorEarning: ((netAmount * parseFloat(value)) / 100).toFixed(2),
-      }));
-    }
   };
 
-  const handleSexChange = (sex) => {
-    setFormData((prev) => ({
-      ...prev,
-      patientSex: sex,
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Add form submission logic here
-  };
+  const renderError = (field) =>
+    errors[field] && (
+      <p className="text-red-600 text-sm mt-1">{errors[field].message}</p>
+    );
 
   return (
     <div className="mx-auto">
@@ -102,218 +167,177 @@ const NewXray = () => {
       </div>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
       >
         <div className="p-6">
           <div className="flex items-center mb-6">
-            <FaFileAlt className="text-blue-500" />
+            <FaUser className="text-blue-500" />
             <h3 className="ml-2 text-lg font-semibold text-gray-800">
               Patient Information
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Bill Date
-                <span className="text-red-500 ml-1">*</span>
+                Bill Date<span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <input
                   type="date"
-                  name="billDate"
-                  value={formData.billDate}
-                  onChange={handleChange}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                  required
+                  {...register("billDate")}
+                  className={`block w-full px-4 py-2 border rounded-lg pl-10 ${
+                    errors.billDate ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaCalendarAlt className="text-gray-400" />
                 </div>
               </div>
+              {renderError("billDate")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Patient Mobile
-                <span className="text-red-500 ml-1">*</span>
+                Patient Mobile<span className="text-red-500 ml-1">*</span>
               </label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  name="patientMobile"
-                  value={formData.patientMobile}
-                  onChange={handleChange}
-                  placeholder="Enter patient mobile number"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                  required
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaUser className="text-gray-400" />
-                </div>
-              </div>
+              <input
+                type="tel"
+                {...register("patientMobile")}
+                placeholder="Enter 10-digit mobile"
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.patientMobile ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {renderError("patientMobile")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Patient Name
-                <span className="text-red-500 ml-1">*</span>
+                Patient Name<span className="text-red-500 ml-1">*</span>
               </label>
               <input
                 type="text"
-                name="patientName"
-                value={formData.patientName}
-                onChange={handleChange}
+                {...register("patientName")}
                 placeholder="Enter patient name"
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                required
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.patientName ? "border-red-500" : "border-gray-300"
+                }`}
               />
+              {renderError("patientName")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Patient Sex
-                <span className="text-red-500 ml-1">*</span>
+                Age<span className="text-red-500 ml-1">*</span>
               </label>
-              <div className="flex space-x-4">
+              <input
+                type="number"
+                {...register("age")}
+                placeholder="e.g., 35"
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.age ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {renderError("age")}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Patient Sex<span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="flex space-x-4 pt-2">
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="patientSex"
-                    checked={formData.patientSex === "Male"}
-                    onChange={() => handleSexChange("Male")}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    {...register("patientSex")}
+                    value="Male"
+                    className="h-4 w-4 text-blue-600"
                   />
                   <span className="ml-2">Male</span>
                 </label>
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="patientSex"
-                    checked={formData.patientSex === "Female"}
-                    onChange={() => handleSexChange("Female")}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    {...register("patientSex")}
+                    value="Female"
+                    className="h-4 w-4 text-blue-600"
                   />
                   <span className="ml-2">Female</span>
                 </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    {...register("patientSex")}
+                    value="Other"
+                    className="h-4 w-4 text-blue-600"
+                  />
+                  <span className="ml-2">Other</span>
+                </label>
               </div>
+              {renderError("patientSex")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Age
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <input
-                type="number"
-                name="age"
-                value={formData.age}
-                onChange={handleChange}
-                placeholder="Enter patient age"
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Referred Doctor
+                Referred Doctor<span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <input
                   type="text"
-                  name="referredDoctor"
-                  value={formData.referredDoctor}
-                  onChange={handleChange}
+                  {...register("referredDoctor")}
                   placeholder="Enter doctor name"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
+                  className={`block w-full px-4 py-2 border rounded-lg pl-10 ${
+                    errors.referredDoctor ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaUserMd className="text-gray-400" />
                 </div>
               </div>
+              {renderError("referredDoctor")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Test Date
-                <span className="text-red-500 ml-1">*</span>
+                Test Date<span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <input
                   type="date"
-                  name="testDate"
-                  value={formData.testDate}
-                  onChange={handleChange}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                  required
+                  {...register("testDate")}
+                  className={`block w-full px-4 py-2 border rounded-lg pl-10 ${
+                    errors.testDate ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaCalendarAlt className="text-gray-400" />
                 </div>
               </div>
+              {renderError("testDate")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Report Date
               </label>
               <div className="relative">
                 <input
                   type="date"
-                  name="reportDate"
-                  value={formData.reportDate}
-                  onChange={handleChange}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
+                  {...register("reportDate")}
+                  className={`block w-full px-4 py-2 border rounded-lg pl-10 ${
+                    errors.reportDate ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaCalendarAlt className="text-gray-400" />
                 </div>
               </div>
+              {renderError("reportDate")}
             </div>
-
-            <div className="space-y-1 md:col-span-2">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Patient Address
-              </label>
-              <textarea
-                name="patientAddress"
-                value={formData.patientAddress}
-                onChange={handleChange}
-                placeholder="Enter patient address"
-                rows="2"
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div className="space-y-1 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Exam / Description
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <textarea
-                name="examDescription"
-                value={formData.examDescription}
-                onChange={handleChange}
-                placeholder="Enter exam description"
-                rows="3"
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Department
-                <span className="text-red-500 ml-1">*</span>
+                Department<span className="text-red-500 ml-1">*</span>
               </label>
               <select
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500  bg-white pr-8"
-                required
+                {...register("department")}
+                className={`block w-full px-4 py-2 border rounded-lg bg-white ${
+                  errors.department ? "border-red-500" : "border-gray-300"
+                }`}
               >
                 <option value="">Select Department</option>
                 {departments.map((dept, index) => (
@@ -322,6 +346,21 @@ const NewXray = () => {
                   </option>
                 ))}
               </select>
+              {renderError("department")}
+            </div>
+            <div className="lg:col-span-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Exam / Description<span className="text-red-500 ml-1">*</span>
+              </label>
+              <textarea
+                {...register("examDescription")}
+                placeholder="e.g., Chest X-ray PA view"
+                rows="2"
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.examDescription ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {renderError("examDescription")}
             </div>
           </div>
         </div>
@@ -333,97 +372,93 @@ const NewXray = () => {
               Billing Information
             </h3>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Bill Amount
-                <span className="text-red-500 ml-1">*</span>
+                Bill Amount<span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  name="billAmount"
-                  value={formData.billAmount}
-                  onChange={handleChange}
+                  {...register("billAmount")}
                   placeholder="0.00"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
                   step="0.01"
-                  required
+                  className={`block w-full px-4 py-2 border rounded-lg pl-8 ${
+                    errors.billAmount ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <span className="text-gray-500">₹</span>
                 </div>
               </div>
+              {renderError("billAmount")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Discount (%)
+                Discount
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  name="discount"
-                  value={formData.discount}
-                  onChange={handleChange}
+                  {...register("discount")}
                   placeholder="0"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-10"
+                  className={`block w-full px-4 py-2 border rounded-lg pr-8 ${
+                    errors.discount ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <span className="text-gray-500">%</span>
                 </div>
               </div>
+              {renderError("discount")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Net Bill Amount
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  name="netBillAmount"
-                  value={formData.netBillAmount}
+                  {...register("netBillAmount")}
                   readOnly
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 pl-10"
+                  className="block w-full px-4 py-2 border rounded-lg bg-gray-100 pl-8"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <span className="text-gray-500">₹</span>
                 </div>
               </div>
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Commission %
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  name="commissionPercent"
-                  value={formData.commissionPercent}
-                  onChange={handleChange}
+                  {...register("commissionPercent")}
                   placeholder="0"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-10"
+                  className={`block w-full px-4 py-2 border rounded-lg pr-8 ${
+                    errors.commissionPercent
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <span className="text-gray-500">%</span>
                 </div>
               </div>
+              {renderError("commissionPercent")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Doctor Earning
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  name="doctorEarning"
-                  value={formData.doctorEarning}
+                  {...register("doctorEarning")}
                   readOnly
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 pl-10"
+                  className="block w-full px-4 py-2 border rounded-lg bg-gray-100 pl-8"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <span className="text-gray-500">₹</span>
@@ -434,9 +469,16 @@ const NewXray = () => {
         </div>
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-          <button type="submit" className="btn-primary">
-            Save X-ray Report
+          <button
+            type="button"
+            onClick={() => reset()}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 mr-3"
+          >
+            Reset
           </button>
+          <LoadingButton isLoading={isPending} type="submit">
+            {isPending ? "Saving..." : "Save X-ray Report"}
+          </LoadingButton>
         </div>
       </form>
     </div>

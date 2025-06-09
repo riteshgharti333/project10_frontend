@@ -1,6 +1,28 @@
 import React, { useState } from 'react';
-import { FaBox, FaTrash, FaPlus, FaArrowLeft } from 'react-icons/fa';
+import { FaBox, FaTrash, FaPlus } from 'react-icons/fa';
 import BackButton from '../../components/BackButton/BackButton';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+// Define Zod schemas
+const materialSpecSchema = z.object({
+  uom: z.string().min(1, "UOM is required"),
+  description: z.string().optional(),
+  alterUnit: z.string().optional(),
+  alterUnitValue: z.number().optional(),
+  serialUniqueNo: z.string().optional(),
+});
+
+const productSchema = z.object({
+  brand: z.string().min(1, "Brand is required"),
+  category: z.string().min(1, "Category is required"),
+  productName: z.string().min(1, "Product name is required"),
+  shortDesc: z.string().optional(),
+  hsnCode: z.string().min(1, "HSN Code is required"),
+  gst: z.string().min(1, "GST is required"),
+  specifications: z.array(materialSpecSchema).min(1, "At least one material specification is required"),
+});
 
 const NewProductEntry = () => {
   // Sample data for dropdowns
@@ -11,16 +33,6 @@ const NewProductEntry = () => {
   const alterUnitOptions = ['Nos', 'Box', 'Kg', 'Ltr', 'Meter', 'Set'];
 
   // Main form state
-  const [formData, setFormData] = useState({
-    brand: '',
-    category: '',
-    productName: '',
-    shortDesc: '',
-    hsnCode: '',
-    gst: '',
-  });
-
-  // Material section state
   const [materials, setMaterials] = useState([
     {
       id: Date.now(),
@@ -28,13 +40,31 @@ const NewProductEntry = () => {
       description: '',
       alterUnit: '',
       alterUnitValue: '',
-      serialNo: '',
+      serialUniqueNo: '',
     },
   ]);
 
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      brand: '',
+      category: '',
+      productName: '',
+      shortDesc: '',
+      hsnCode: '',
+      gst: '',
+      specifications: materials,
+    },
+  });
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setValue(name, value);
   };
 
   const handleMaterialChange = (id, e) => {
@@ -55,7 +85,7 @@ const NewProductEntry = () => {
         description: '',
         alterUnit: '',
         alterUnitValue: '',
-        serialNo: '',
+        serialUniqueNo: '',
       },
     ]);
   };
@@ -66,11 +96,10 @@ const NewProductEntry = () => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmitForm = (data) => {
     const productEntry = {
-      ...formData,
-      materials,
+      ...data,
+      specifications: materials,
     };
     console.log('Product Entry:', productEntry);
     // Submit logic here
@@ -94,7 +123,7 @@ const NewProductEntry = () => {
       </div>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(handleSubmitForm)}
         className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
       >
         {/* Product Information Section */}
@@ -113,11 +142,10 @@ const NewProductEntry = () => {
                 Brand <span className="text-red-500 ml-1">*</span>
               </label>
               <select
-                name="brand"
-                value={formData.brand}
+                {...register("brand")}
                 onChange={handleChange}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                required
+                className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${errors.brand ? 'border-red-500' : ''}`}
+                
               >
                 <option value="">Select Brand</option>
                 {brands.map((brand, index) => (
@@ -126,6 +154,7 @@ const NewProductEntry = () => {
                   </option>
                 ))}
               </select>
+              {errors.brand && <p className="text-red-600 text-sm">{errors.brand.message}</p>}
             </div>
 
             {/* Category */}
@@ -134,11 +163,10 @@ const NewProductEntry = () => {
                 Category <span className="text-red-500 ml-1">*</span>
               </label>
               <select
-                name="category"
-                value={formData.category}
+                {...register("category")}
                 onChange={handleChange}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                required
+                className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${errors.category ? 'border-red-500' : ''}`}
+                
               >
                 <option value="">Select Category</option>
                 {categories.map((category, index) => (
@@ -147,6 +175,7 @@ const NewProductEntry = () => {
                   </option>
                 ))}
               </select>
+              {errors.category && <p className="text-red-600 text-sm">{errors.category.message}</p>}
             </div>
 
             {/* Product Name */}
@@ -156,13 +185,13 @@ const NewProductEntry = () => {
               </label>
               <input
                 type="text"
-                name="productName"
-                value={formData.productName}
+                {...register("productName")}
                 onChange={handleChange}
                 placeholder="Enter product name"
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                required
+                className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${errors.productName ? 'border-red-500' : ''}`}
+                
               />
+              {errors.productName && <p className="text-red-600 text-sm">{errors.productName.message}</p>}
             </div>
 
             {/* Short Description */}
@@ -172,8 +201,7 @@ const NewProductEntry = () => {
               </label>
               <input
                 type="text"
-                name="shortDesc"
-                value={formData.shortDesc}
+                {...register("shortDesc")}
                 onChange={handleChange}
                 placeholder="Enter short description"
                 className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
@@ -187,13 +215,13 @@ const NewProductEntry = () => {
               </label>
               <input
                 type="text"
-                name="hsnCode"
-                value={formData.hsnCode}
+                {...register("hsnCode")}
                 onChange={handleChange}
                 placeholder="Enter HSN code"
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                required
+                className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${errors.hsnCode ? 'border-red-500' : ''}`}
+                
               />
+              {errors.hsnCode && <p className="text-red-600 text-sm">{errors.hsnCode.message}</p>}
             </div>
 
             {/* GST */}
@@ -202,11 +230,10 @@ const NewProductEntry = () => {
                 GST(%) <span className="text-red-500 ml-1">*</span>
               </label>
               <select
-                name="gst"
-                value={formData.gst}
+                {...register("gst")}
                 onChange={handleChange}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                required
+                className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${errors.gst ? 'border-red-500' : ''}`}
+                
               >
                 <option value="">Select GST %</option>
                 {gstOptions.map((gst, index) => (
@@ -215,6 +242,7 @@ const NewProductEntry = () => {
                   </option>
                 ))}
               </select>
+              {errors.gst && <p className="text-red-600 text-sm">{errors.gst.message}</p>}
             </div>
           </div>
         </div>
@@ -251,8 +279,8 @@ const NewProductEntry = () => {
                   name="uom"
                   value={material.uom}
                   onChange={(e) => handleMaterialChange(material.id, e)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  required
+                  className={`block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.specifications?.[index]?.uom ? 'border-red-500' : ''}`}
+                  
                 >
                   <option value="">Select</option>
                   {uomOptions.map((uom, i) => (
@@ -261,6 +289,7 @@ const NewProductEntry = () => {
                     </option>
                   ))}
                 </select>
+                {errors.specifications?.[index]?.uom && <p className="text-red-600 text-sm">{errors.specifications[index].uom.message}</p>}
               </div>
 
               {/* Description */}
@@ -274,8 +303,9 @@ const NewProductEntry = () => {
                   value={material.description}
                   onChange={(e) => handleMaterialChange(material.id, e)}
                   placeholder="Description"
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className={`block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.specifications?.[index]?.description ? 'border-red-500' : ''}`}
                 />
+                {errors.specifications?.[index]?.description && <p className="text-red-600 text-sm">{errors.specifications[index].description.message}</p>}
               </div>
 
               {/* Alter Unit */}
@@ -287,7 +317,7 @@ const NewProductEntry = () => {
                   name="alterUnit"
                   value={material.alterUnit}
                   onChange={(e) => handleMaterialChange(material.id, e)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className={`block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.specifications?.[index]?.alterUnit ? 'border-red-500' : ''}`}
                 >
                   <option value="">Select</option>
                   {alterUnitOptions.map((unit, i) => (
@@ -296,6 +326,7 @@ const NewProductEntry = () => {
                     </option>
                   ))}
                 </select>
+                {errors.specifications?.[index]?.alterUnit && <p className="text-red-600 text-sm">{errors.specifications[index].alterUnit.message}</p>}
               </div>
 
               {/* Alter Unit Value */}
@@ -309,8 +340,9 @@ const NewProductEntry = () => {
                   value={material.alterUnitValue}
                   onChange={(e) => handleMaterialChange(material.id, e)}
                   placeholder="Value"
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className={`block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.specifications?.[index]?.alterUnitValue ? 'border-red-500' : ''}`}
                 />
+                {errors.specifications?.[index]?.alterUnitValue && <p className="text-red-600 text-sm">{errors.specifications[index].alterUnitValue.message}</p>}
               </div>
 
               {/* Serial/Unique No */}
@@ -321,11 +353,11 @@ const NewProductEntry = () => {
                 <div className="flex">
                   <input
                     type="text"
-                    name="serialNo"
-                    value={material.serialNo}
+                    name="serialUniqueNo"
+                    value={material.serialUniqueNo}
                     onChange={(e) => handleMaterialChange(material.id, e)}
                     placeholder="Serial No"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className={`block w-full px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.specifications?.[index]?.serialUniqueNo ? 'border-red-500' : ''}`}
                   />
                   {materials.length > 1 && (
                     <button
@@ -337,6 +369,7 @@ const NewProductEntry = () => {
                     </button>
                   )}
                 </div>
+                {errors.specifications?.[index]?.serialUniqueNo && <p className="text-red-600 text-sm">{errors.specifications[index].serialUniqueNo.message}</p>}
               </div>
             </div>
           ))}

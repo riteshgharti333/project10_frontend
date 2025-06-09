@@ -1,34 +1,112 @@
-import React, { useState } from "react";
+import React from "react";
 import { FaAmbulance, FaIdCard, FaUser, FaCar } from "react-icons/fa";
-import BackButton from "../../components/BackButton/BackButton";
 import { FaPhone } from "react-icons/fa6";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import BackButton from "../../components/BackButton/BackButton";
+import { toast } from "sonner";
+import LoadingButton from "../../components/LoadingButton/LoadingButton";
+
+const ambulanceSchema = z.object({
+  modelName: z.string().min(1, "Model name is required"),
+  cardBrand: z.string().min(1, "Brand is required"),
+  registerNo: z.string().min(1, "Registration number is required"),
+  driverName: z.string().min(1, "Driver name is required"),
+  driverContact: z.string().min(10, "Driver contact must be at least 10 digits"),
+  status: z.enum(["Active", "Inactive", "Under Maintenance"]).default("Active"),
+});
+
+const cardBrands = ["TATA", "Mahindra", "Force", "Toyota", "Ford", "Others"];
+const statusOptions = ["Active", "Inactive", "Under Maintenance"];
+
+const formFields = [
+  {
+    section: "Ambulance Details",
+    icon: <FaAmbulance className="text-blue-500" />,
+    fields: [
+      {
+        label: "Model Name",
+        type: "text",
+        name: "modelName",
+        placeholder: "Enter model name",
+        icon: <FaCar className="text-gray-400" />,
+      },
+      {
+        label: "Brand",
+        type: "select",
+        name: "cardBrand",
+        placeholder: "Select Brand",
+        options: cardBrands,
+      },
+      {
+        label: "Registration No.",
+        type: "text",
+        name: "registerNo",
+        placeholder: "Enter registration number",
+        icon: <FaIdCard className="text-gray-400" />,
+      },
+      {
+        label: "Driver Name",
+        type: "text",
+        name: "driverName",
+        placeholder: "Enter driver name",
+        icon: <FaUser className="text-gray-400" />,
+      },
+      {
+        label: "Driver Contact",
+        type: "tel",
+        name: "driverContact",
+        placeholder: "Enter driver contact number",
+        icon: <FaPhone className="text-gray-400" />,
+      },
+      {
+        label: "Status",
+        type: "select",
+        name: "status",
+        placeholder: "Select status",
+        options: statusOptions,
+      },
+    ],
+  },
+];
 
 const NewAmbulance = () => {
-  const [formData, setFormData] = useState({
-    modelName: "",
-    cardBrand: "",
-    registerNo: "",
-    driverName: "",
-    driverContact: "",
-    status: "Active",
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(ambulanceSchema),
+    defaultValues: {
+      modelName: "",
+      cardBrand: "",
+      registerNo: "",
+      driverName: "",
+      driverContact: "",
+      status: "Active",
+    },
   });
 
-  const cardBrands = ["TATA", "Mahindra", "Force", "Toyota", "Ford", "Others"];
+  const [isPending, setIsPending] = React.useState(false);
 
-  const statusOptions = ["Active", "Inactive", "Under Maintenance"];
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Add form submission logic here
+  const onSubmit = async (data) => {
+    try {
+      setIsPending(true);
+      // Replace with your actual API call
+      // const response = await createAmbulance(data);
+      // Simulating API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      
+      toast.success("Ambulance created successfully");
+      reset();
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Failed to create ambulance");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -49,163 +127,106 @@ const NewAmbulance = () => {
       </div>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
       >
-        <div className="p-6">
-          <div className="flex items-center mb-6">
-            <FaAmbulance className="text-blue-500" />
-            <h3 className="ml-2 text-lg font-semibold text-gray-800">
-              Ambulance Details
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Model Name
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  name="modelName"
-                  value={formData.modelName}
-                  onChange={handleChange}
-                  placeholder="Enter model name"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                  required
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaCar className="text-gray-400" />
-                </div>
-              </div>
+        {formFields.map((section, sectionIndex) => (
+          <div
+            key={sectionIndex}
+            className={`p-6 ${
+              sectionIndex !== 0 ? "border-t border-gray-100" : ""
+            }`}
+          >
+            <div className="flex items-center mb-6">
+              {section.icon}
+              <h3 className="ml-2 text-lg font-semibold text-gray-800">
+                {section.section}
+              </h3>
             </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Brand
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <div className="relative">
-                <select
-                  name="cardBrand"
-                  value={formData.cardBrand}
-                  onChange={handleChange}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8"
-                  required
-                >
-                  <option value="">Select Brand</option>
-                  {cardBrands.map((brand, index) => (
-                    <option key={index} value={brand}>
-                      {brand}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg
-                    className="h-5 w-5 text-gray-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {section.fields.map((field, fieldIndex) => {
+                const error = errors[field.name];
+                return (
+                  <div
+                    key={fieldIndex}
+                    className={`space-y-1 ${
+                      field.type === "textarea" ? "md:col-span-2" : ""
+                    }`}
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      {field.label}
+                      {field.type !== "select" && field.name !== "driverContact" && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
+                    </label>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Registration No.
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  name="registerNo"
-                  value={formData.registerNo}
-                  onChange={handleChange}
-                  placeholder="Enter registration number"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                  required
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaIdCard className="text-gray-400" />
-                </div>
-              </div>
-            </div>
+                    {field.type === "select" ? (
+                      <div className="relative">
+                        <select
+                          {...register(field.name)}
+                          className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8 ${
+                            error ? "border-red-500" : "border-gray-300"
+                          }`}
+                          aria-invalid={error ? "true" : "false"}
+                        >
+                          <option value="">{field.placeholder}</option>
+                          {field.options.map((option, i) => (
+                            <option key={i} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <svg
+                            className="h-5 w-5 text-gray-400"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type={field.type}
+                          {...register(field.name)}
+                          placeholder={field.placeholder}
+                          className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                            field.icon ? "pl-10" : ""
+                          } ${error ? "border-red-500" : "border-gray-300"}`}
+                          aria-invalid={error ? "true" : "false"}
+                        />
+                        {field.icon && (
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            {field.icon}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Driver Name
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  name="driverName"
-                  value={formData.driverName}
-                  onChange={handleChange}
-                  placeholder="Enter driver name"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                  required
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaUser className="text-gray-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Driver Contact
-              </label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  name="driverContact"
-                  value={formData.driverContact}
-                  onChange={handleChange}
-                  placeholder="Enter driver contact number"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaPhone className="text-gray-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Status
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8"
-                required
-              >
-                {statusOptions.map((option, index) => (
-                  <option key={index} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+                    {error && (
+                      <p className="text-red-600 text-sm mt-1" role="alert">
+                        {error.message}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
+        ))}
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-          <button type="submit" className="btn-primary">
-            Save Ambulance
-          </button>
+          <LoadingButton isLoading={isPending} type="submit">
+            {isPending ? "Saving..." : "Save Ambulance"}
+          </LoadingButton>
         </div>
       </form>
     </div>

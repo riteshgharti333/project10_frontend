@@ -2,12 +2,11 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
-import { useGetAmissions } from "../../feature/hooks/useAdmisson";
 import Loader from "../../components/Loader/Loader";
+import { useGetAdmissions } from "../../feature/hooks/useAdmisson";
 
 const AddmissionEntriesTable = () => {
-  const { data, error, isLoading, isError } = useGetAmissions();
-
+  const { data, isLoading } = useGetAdmissions();
 
   const columns = useMemo(
     () => [
