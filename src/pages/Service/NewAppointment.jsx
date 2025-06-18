@@ -1,23 +1,14 @@
 import React from "react";
-import {
-  FaCalendarAlt,
-  FaUserMd,
-  FaBuilding,
-} from "react-icons/fa";
+import { FaCalendarAlt, FaUserMd, FaBuilding } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import BackButton from "../../components/BackButton/BackButton";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
 import { toast } from "sonner";
-// import { useCreateAppointment } from "../../feature/hooks/useAppointments"; 
-
-const appointmentSchema = z.object({
-  appointmentDate: z.coerce.date(),
-  doctorName: z.string().min(1, "Doctor name is required"),
-  department: z.string().min(1, "Department is required"),
-  appointmentTime: z.string().min(1, "Appointment time is required"),
-});
+import { appointmentSchema } from "@hospital/schemas";
+import { useCreateAppointment } from "../../feature/hooks/useAppointment";
+import { useNavigate } from "react-router-dom";
 
 const formFields = [
   {
@@ -30,6 +21,7 @@ const formFields = [
         name: "appointmentDate",
         placeholder: "Select appointment date",
         icon: <FaCalendarAlt className="text-gray-400" />,
+        required: true,
       },
       {
         label: "Doctor Name",
@@ -37,6 +29,7 @@ const formFields = [
         name: "doctorName",
         placeholder: "Select doctor",
         options: ["Dr. Smith", "Dr. Johnson", "Dr. Williams", "Dr. Brown"],
+        required: true,
       },
       {
         label: "Department",
@@ -44,18 +37,21 @@ const formFields = [
         name: "department",
         placeholder: "Select department",
         options: ["Cardiology", "Neurology", "Pediatrics", "Orthopedics"],
+        required: true,
       },
       {
         label: "Appointment Time",
         type: "time",
         name: "appointmentTime",
         placeholder: "Select appointment time",
+        required: true,
       },
     ],
   },
 ];
 
 const NewAppointment = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -71,19 +67,18 @@ const NewAppointment = () => {
     },
   });
 
-  // const { mutateAsync, isPending } = useCreateAppointment();
+  const { mutateAsync, isPending } = useCreateAppointment();
 
   const onSubmit = async (data) => {
-    try {
-      // const response = await mutateAsync(data);
-      console.log("Appointment created:", data);
-      toast.success("Appointment scheduled successfully!");
-      reset();
-    } catch (error) {
-      console.log(error);
-      toast.error(
-        error?.response?.data?.message || "Failed to schedule appointment"
-      );
+    const cleanedData = {
+      ...data,
+      description: data.description?.trim() || undefined,
+    };
+
+    const response = await mutateAsync(cleanedData);
+
+    if (response?.data?.success) {
+      navigate("/appointment/:id");
     }
   };
 
@@ -129,7 +124,9 @@ const NewAppointment = () => {
                   <div key={fieldIndex} className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
                       {field.label}
-                      <span className="text-red-500 ml-1">*</span>
+                      {field.required && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
                     </label>
 
                     {field.type === "select" ? (
@@ -141,7 +138,9 @@ const NewAppointment = () => {
                           }`}
                           aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
+                          <option value="" disabled selected hidden>
+                            {field.placeholder}
+                          </option>
                           {field.options.map((option, i) => (
                             <option key={i} value={option}>
                               {option}
@@ -195,8 +194,8 @@ const NewAppointment = () => {
         ))}
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-          <LoadingButton type="submit">
-            Schedule Appointment
+          <LoadingButton type="submit" isLoading={isPending}>
+            {isPending ? "Scheduling" : "Schedule Appointment"}
           </LoadingButton>
         </div>
       </form>

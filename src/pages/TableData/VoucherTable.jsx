@@ -2,9 +2,13 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
-import { nurseData, voucherData } from "../../assets/tableData";
 
-const VoucharTable = () => {
+import { useGetVouchers } from "../../feature/transectionHooks/useVoucher";
+
+const VoucherTable = () => {
+
+   const { data, isLoading } = useGetVouchers();
+
 const columns = useMemo(
   () => [
     {
@@ -79,16 +83,16 @@ const columns = useMemo(
     <div className="">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-          Vouchars
+          Vouchers
         </h2>
-        <Link className="btn-primary" to={"/new-vouchar"}>
-          <FaPlus /> New Vouchar
+        <Link className="btn-primary" to={"/new-voucher"}>
+          <FaPlus /> New Voucher
         </Link>
       </div>
 
-      <Table data={voucherData} columns={columns} path="vouchar" />
+      <Table data={data} columns={columns} path="voucher" />
     </div>
   );
 };
 
-export default VoucharTable;
+export default VoucherTable;

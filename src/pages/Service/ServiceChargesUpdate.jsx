@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FaMoneyBillWave, FaPlus, FaTrash, FaArrowLeft } from 'react-icons/fa';
 import BackButton from '../../components/BackButton/BackButton';
 
+
 const ServiceChargesUpdate = () => {
   // Sample service categories
   const serviceCategories = [

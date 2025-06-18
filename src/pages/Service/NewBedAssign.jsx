@@ -5,19 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import BackButton from "../../components/BackButton/BackButton";
 import { useCreateBedAssignment } from "../../feature/hooks/useBedAssing";
-import { toast } from "sonner";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
-
-const bedAssignmentSchema = z.object({
-  wardNumber: z.string().min(1, "Ward number is required"),
-  bedNumber: z.string().min(1, "Bed number is required"),
-  bedType: z.string().min(1, "Bed type is required"),
-  patientName: z.string().min(1, "Patient name is required"),
-  allocateDate: z.coerce.date(),
-  dischargeDate: z.coerce.date().optional(),
-  status: z.enum(["Active", "Discharged", "Transferred"]).default("Active"),
-  notes: z.string().optional(),
-});
+import { bedAssignmentSchema } from "@hospital/schemas";
+import { useNavigate } from "react-router-dom";
 
 const formFields = [
   {
@@ -111,6 +101,7 @@ const formFields = [
 ];
 
 const NewBedAssign = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -133,24 +124,16 @@ const NewBedAssign = () => {
   const { mutateAsync, isPending } = useCreateBedAssignment();
 
   const onSubmit = async (data) => {
-    try {
-      // Clean up the data - remove empty optional fields
-      const cleanedData = {
-        ...data,
-        dischargeDate: data.dischargeDate || undefined,
-        notes: data.notes?.trim() || undefined,
-      };
+    const cleanedData = {
+      ...data,
+      dischargeDate: data.dischargeDate || undefined,
+      notes: data.notes?.trim() || undefined,
+    };
 
-      const response = await mutateAsync(cleanedData);
-      const { success, message, data: createdAssignment } = response;
+    const response = await mutateAsync(cleanedData);
 
-      if (success) {
-        toast.success(message || "Bed assigned successfully");
-        reset(); // Reset form after successful submission
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error(error?.response?.data?.message || "Failed to assign bed");
+    if (response?.data?.success) {
+      navigate("/bed/:id");
     }
   };
 
@@ -215,7 +198,9 @@ const NewBedAssign = () => {
                           }`}
                           aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
+                          <option value="" disabled selected hidden>
+                            {field.placeholder}
+                          </option>
                           {field.options.map((option, i) => (
                             <option key={i} value={option}>
                               {option}

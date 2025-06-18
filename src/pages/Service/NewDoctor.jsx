@@ -1,4 +1,3 @@
-import React from "react";
 import {
   FaUserMd,
   FaPhone,
@@ -11,54 +10,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import BackButton from "../../components/BackButton/BackButton";
 import { toast } from "sonner";
-
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
+import { doctorSchema } from "@hospital/schemas";
+import { useCreateDoctor } from "../../feature/hooks/useDoctor";
+import { useNavigate } from "react-router-dom";
 
-// --- Zod Schema for Doctor Validation ---
-const doctorSchema = z.object({
-  fullName: z.string().min(1, "Full name is required"),
-  mobileNumber: z
-    .string()
-    .min(10, "Mobile number must be at least 10 digits"),
-  registrationNo: z.string().min(1, "Registration number is required"),
-  qualification: z.string().min(1, "Qualification is required"),
-  designation: z.string().min(1, "Designation is required"),
-  department: z.string().min(1, "Department is required"),
-  specialization: z.string().min(1, "Specialization is required"),
-  status: z.enum(["Active", "Inactive", "On Leave"]),
-});
-
-// --- Mock Custom Hook for creating a doctor (similar to useCreateDepartment) ---
-// In a real app, this would be in its own file (e.g., /feature/hooks/useDoctors.js)
-const useCreateDoctor = () => {
-  // This is a mock implementation. Replace with your actual TanStack Query mutation.
-  const [isPending, setIsPending] = React.useState(false);
-  const mutateAsync = (data) => {
-    setIsPending(true);
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        setIsPending(false);
-        // Simulate a potential error for demonstration
-        if (data.fullName.toLowerCase().includes("error")) {
-          return reject({
-            response: {
-              data: { message: "Failed to create doctor due to invalid name." },
-            },
-          });
-        }
-        console.log("Submitting Doctor Data:", data);
-        resolve({
-          success: true,
-          message: "Doctor created successfully!",
-          data: { id: `DR-${Date.now()}`, ...data },
-        });
-      }, 1500);
-    });
-  };
-  return { mutateAsync, isPending };
-};
-
-// --- Form Fields Configuration ---
 const formFields = [
   {
     section: "Doctor Information",
@@ -70,6 +26,7 @@ const formFields = [
         name: "fullName", // Matches schema key
         placeholder: "Enter doctor's full name",
         icon: <FaUserMd className="text-gray-400" />,
+        required: true, // Marked as required
       },
       {
         label: "Mobile Number",
@@ -77,6 +34,7 @@ const formFields = [
         name: "mobileNumber", // Matches schema key
         placeholder: "Enter mobile number",
         icon: <FaPhone className="text-gray-400" />,
+        required: true, // Marked as required
       },
       {
         label: "Registration No",
@@ -84,6 +42,7 @@ const formFields = [
         name: "registrationNo", // Matches schema key
         placeholder: "Enter registration number",
         icon: <FaIdCard className="text-gray-400" />,
+        required: true, // Marked as required
       },
       {
         label: "Qualification",
@@ -91,6 +50,7 @@ const formFields = [
         name: "qualification",
         placeholder: "Enter qualification",
         icon: <FaGraduationCap className="text-gray-400" />,
+        required: true, // Marked as required
       },
     ],
   },
@@ -104,6 +64,7 @@ const formFields = [
         name: "designation",
         placeholder: "Enter designation",
         icon: <FaBriefcase className="text-gray-400" />,
+        required: true, // Marked as required
       },
       {
         label: "Department",
@@ -117,12 +78,14 @@ const formFields = [
           "Orthopedics",
           "General Medicine",
         ],
+        required: true, // Marked as required
       },
       {
         label: "Specialization",
         type: "text",
         name: "specialization",
         placeholder: "Enter specialization",
+        required: true, // Marked as required
       },
       {
         label: "Status",
@@ -130,12 +93,14 @@ const formFields = [
         name: "status",
         placeholder: "Select status",
         options: ["Active", "Inactive", "On Leave"],
+        required: false, // Optional field
       },
     ],
   },
 ];
 
 const NewDoctor = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -158,15 +123,15 @@ const NewDoctor = () => {
   const { mutateAsync, isPending } = useCreateDoctor();
 
   const onSubmit = async (data) => {
-    try {
-      const response = await mutateAsync(data);
-      if (response.success) {
-        toast.success(response.message);
-        reset(); // Reset the form fields on successful submission
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error(error?.response?.data?.message || "Failed to create doctor");
+    const cleanedData = {
+      ...data,
+      description: data.description?.trim() || undefined,
+    };
+
+    const response = await mutateAsync(cleanedData);
+
+    if (response?.data?.success) {
+      navigate("/doctor/:id");
     }
   };
 
@@ -212,7 +177,9 @@ const NewDoctor = () => {
                   <div key={fieldIndex} className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
                       {field.label}
-                      <span className="text-red-500 ml-1">*</span>
+                      {field.required && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
                     </label>
 
                     {field.type === "select" ? (
@@ -224,7 +191,9 @@ const NewDoctor = () => {
                           }`}
                           aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
+                          <option value="" disabled selected hidden>
+                            {field.placeholder}
+                          </option>
                           {field.options.map((option, i) => (
                             <option key={i} value={option}>
                               {option}
@@ -277,13 +246,6 @@ const NewDoctor = () => {
         ))}
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-          <button
-            type="button"
-            onClick={() => reset()}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 mr-3"
-          >
-            Reset
-          </button>
           <LoadingButton isLoading={isPending} type="submit">
             {isPending ? "Creating..." : "Add Doctor"}
           </LoadingButton>

@@ -15,17 +15,8 @@ import BackButton from "../../components/BackButton/BackButton";
 import { toast } from "sonner";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
 import { useCreatePatient } from "../../feature/hooks/usePatient";
-
-const patientSchema = z.object({
-  fullName: z.string().min(1, "Full name is required"),
-  age: z.number().int().positive("Age must be positive"),
-  mobileNumber: z.string().min(10, "Mobile number must be 10 digits"),
-  gender: z.string().min(1, "Gender is required"),
-  bedNumber: z.string().min(1, "Bed number is required"),
-  aadhaarNumber: z.string().length(12, "Aadhaar must be 12 digits"),
-  address: z.string().min(1, "Address is required"),
-  medicalHistory: z.string().min(1, "Medical history is required"),
-});
+import { patientSchema } from "@hospital/schemas";
+import { useNavigate } from "react-router-dom";
 
 const formFields = [
   {
@@ -102,6 +93,7 @@ const formFields = [
 ];
 
 const PatientRegister = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -124,9 +116,7 @@ const PatientRegister = () => {
   const { mutateAsync, isPending } = useCreatePatient();
 
   const onSubmit = async (data) => {
-    try {
-      // Convert age to number as form returns string
-      const formattedData = {
+       const formattedData = {
         ...data,
         age: parseInt(data.age, 10),
       };
@@ -134,18 +124,12 @@ const PatientRegister = () => {
       const response = await mutateAsync(formattedData);
       const { success, message, data: createdPatient } = response;
 
-      if (success) {
-        toast.success(message || "Patient registered successfully");
-        reset(); // Reset form after successful submission
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error(
-        error?.response?.data?.message || "Failed to register patient"
-      );
+         if (response?.data?.success) {
+            toast.success(response?.data?.message);
+            navigate(`/patient/${response.data.data.id}`);
+          }
     }
-  };
-
+ 
   return (
     <div className="mx-auto">
       <div className="mb-8">
@@ -205,7 +189,9 @@ const PatientRegister = () => {
                           } ${error ? "border-red-500" : "border-gray-300"}`}
                           aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
+                          <option value="" disabled selected hidden>
+                            {field.placeholder}
+                          </option>
                           {field.options.map((option, i) => (
                             <option key={i} value={option}>
                               {option}

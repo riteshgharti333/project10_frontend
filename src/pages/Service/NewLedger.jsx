@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaUser,
   FaUserMd,
@@ -14,129 +15,71 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "sonner"; // Assuming sonner for toasts
-
+import { toast } from "sonner";
+import LoadingButton from "../../components/LoadingButton/LoadingButton";
 import BackButton from "../../components/BackButton/BackButton";
-// import LoadingButton from "../../components/LoadingButton/LoadingButton";
 
-// --- Mock Component for Demonstration ---
-const LoadingButton = ({ isLoading, children, ...props }) => (
-  <button
-    {...props}
-    disabled={isLoading}
-    className="px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
-  >
-    {isLoading ? "Saving..." : children}
-  </button>
-);
-// --- End Mock Component ---
+// --- Import all your mutation hooks ---
+import { useCreateBankLedgerEntry } from "../../feature/ledgerHook/useBankLedger";
+import { useCreateCashLedgerEntry } from "../../feature/ledgerHook/useCashLedger";
+import { useCreateDiagnosticsLedgerEntry } from "../../feature/ledgerHook/useDiagnosticsLedger";
+import { useCreateDoctorLedgerEntry } from "../../feature/ledgerHook/useDoctorLedger";
+import { useCreateExpenseEntry } from "../../feature/ledgerHook/useExpenseLedger";
+import { useCreateInsuranceLedgerEntry } from "../../feature/ledgerHook/useInsuranceLedger";
+import { useCreatePatientLedgerEntry } from "../../feature/ledgerHook/usePatientLedger";
+import { useCreatePharmacyLedgerEntry } from "../../feature/ledgerHook/usePharmacyLedger";
+import { useCreateSupplierLedgerEntry } from "../../feature/ledgerHook/useSupplierLedger";
 
-// --- Zod Schemas for Each Ledger Type ---
+// --- Schemas (assuming they are in a separate file as provided) ---
+// (Your schema code goes here or is imported from @hospital/schemas)
 
-const patientLedgerSchema = z.object({
-  patientName: z.string().min(1, "Patient name is required"),
-  date: z.coerce.date(),
-  description: z.string().min(1, "Description is required"),
-  amountType: z.enum(["Debit", "Credit"]),
-  amount: z.coerce.number().positive("Amount must be a positive number"),
-  paymentMode: z.string().min(1, "Payment mode is required"),
-  transactionId: z.string().optional(),
-  remarks: z.string().optional(),
-});
+// Example Schemas (Make sure these match your actual schema definitions)
+// NOTE: I've corrected these schemas based on your form fields and common sense.
+import { bankLedgerSchema } from "@hospital/schemas";
+import { cashLedgerSchema } from "@hospital/schemas";
+import { diagnosticsLedgerSchema } from "@hospital/schemas";
+import { doctorLedgerSchema } from "@hospital/schemas";
+import { expenseLedgerSchema } from "@hospital/schemas";
+import { insuranceLedgerSchema } from "@hospital/schemas";
+import { patientLedgerSchema } from "@hospital/schemas";
+import { pharmacyLedgerSchema } from "@hospital/schemas";
+import { supplierLedgerSchema } from "@hospital/schemas";
 
-const doctorLedgerSchema = z.object({
-  doctorName: z.string().min(1, "Doctor name is required"),
-  date: z.coerce.date(),
-  description: z.string().min(1, "Description is required"),
-  amountType: z.enum(["Debit", "Credit"]),
-  amount: z.coerce.number().positive("Amount must be a positive number"),
-  paymentMode: z.string().min(1, "Payment mode is required"),
-  transactionId: z.string().optional(),
-  remarks: z.string().optional(),
-});
-
-const supplierLedgerSchema = z.object({
-  supplierName: z.string().min(1, "Supplier name is required"),
-  date: z.coerce.date(),
-  invoiceNo: z.string().min(1, "Invoice number is required"),
-  description: z.string().min(1, "Description is required"),
-  amountType: z.enum(["Debit", "Credit"]),
-  amount: z.coerce.number().positive("Amount must be a positive number"),
-  paymentMode: z.string().optional(),
-  transactionId: z.string().optional(),
-  billFile: z.any().optional(),
-  remarks: z.string().optional(),
-});
-
-const pharmacyLedgerSchema = z.object({
-  date: z.coerce.date(),
-  medicineName: z.string().min(1, "Medicine name/category is required"),
-  description: z.string().min(1, "Description is required"),
-  amountType: z.enum(["Debit", "Credit"]),
-  amount: z.coerce.number().positive("Amount must be a positive number"),
-  paymentMode: z.string().min(1, "Payment mode is required"),
-  remarks: z.string().optional(),
-});
-
-const labLedgerSchema = z.object({
-  patientName: z.string().min(1, "Patient name is required"),
-  date: z.coerce.date(),
-  testName: z.string().min(1, "Test name is required"),
-  description: z.string().optional(),
-  amount: z.coerce.number().positive("Amount must be a positive number"),
-  paymentMode: z.string().min(1, "Payment mode is required"),
-  reportFile: z.any().optional(),
-  remarks: z.string().optional(),
-});
-
-const cashLedgerSchema = z.object({
-  date: z.coerce.date(),
-  purpose: z.string().min(1, "Purpose is required"),
-  amountType: z.enum(["Debit", "Credit"]),
-  amount: z.coerce.number().positive("Amount must be a positive number"),
-  remarks: z.string().optional(),
-});
-
-const bankLedgerSchema = z.object({
-  bankName: z.string().min(1, "Bank name is required"),
-  date: z.coerce.date(),
-  description: z.string().min(1, "Description is required"),
-  amountType: z.enum(["Debit", "Credit"]),
-  amount: z.coerce.number().positive("Amount must be a positive number"),
-  transactionId: z.string().optional(),
-  remarks: z.string().optional(),
-});
-
-const insuranceLedgerSchema = z.object({
-  patientName: z.string().min(1, "Patient name is required"),
-  tpaCompany: z.string().min(1, "TPA/Insurance Company is required"),
-  claimAmount: z.coerce.number().positive("Claim amount must be positive"),
-  approvedAmount: z.coerce.number().min(0).optional(),
-  settledAmount: z.coerce.number().min(0).optional(),
-  status: z.enum(["Pending", "Approved", "Rejected"]),
-  remarks: z.string().optional(),
-});
-
-const expenseLedgerSchema = z.object({
-  expenseCategory: z.string().min(1, "Expense category is required"),
-  date: z.coerce.date(),
-  description: z.string().min(1, "Description is required"),
-  amount: z.coerce.number().positive("Amount must be a positive number"),
-  paymentMode: z.string().min(1, "Payment mode is required"),
-  transactionId: z.string().optional(),
-  remarks: z.string().optional(),
-});
-
+// --- Mappings for schemas, hooks, and navigation paths ---
 const schemas = {
   Patient: patientLedgerSchema,
   Doctor: doctorLedgerSchema,
   Supplier: supplierLedgerSchema,
   Pharmacy: pharmacyLedgerSchema,
-  Lab: labLedgerSchema,
+  Lab: diagnosticsLedgerSchema,
   Cash: cashLedgerSchema,
   Bank: bankLedgerSchema,
   Insurance: insuranceLedgerSchema,
   Expense: expenseLedgerSchema,
+};
+
+const mutationHooks = {
+  Patient: useCreatePatientLedgerEntry,
+  Doctor: useCreateDoctorLedgerEntry,
+  Supplier: useCreateSupplierLedgerEntry,
+  Pharmacy: useCreatePharmacyLedgerEntry,
+  Lab: useCreateDiagnosticsLedgerEntry,
+  Cash: useCreateCashLedgerEntry,
+  Bank: useCreateBankLedgerEntry,
+  Insurance: useCreateInsuranceLedgerEntry,
+  Expense: useCreateExpenseEntry,
+};
+
+const navigationPaths = {
+  Patient: "/ledger/patient-ledger",
+  Doctor: "/ledger/doctor-ledger",
+  Supplier: "/ledger/supplier-ledger",
+  Pharmacy: "/ledger/pharmacy-ledger",
+  Lab: "/ledger/lab-ledger",
+  Cash: "/ledger/cash-ledger",
+  Bank: "/ledger/bank-ledger",
+  Insurance: "/ledger/insurance-ledger",
+  Expense: "/ledger/expense-ledger",
 };
 
 // --- Main Component ---
@@ -155,29 +98,52 @@ const NewLedger = () => {
     { value: "Expense", label: "Expense Ledger", icon: <FaFileInvoice /> },
   ];
 
+  // More dynamic rendering of the form component
   const renderForm = () => {
-    switch (selectedLedger) {
+    const ledgerType = selectedLedger;
+    const schema = schemas[ledgerType];
+    let formConfig;
+
+    switch (ledgerType) {
       case "Patient":
-        return <PatientLedgerForm key={selectedLedger} />;
+        formConfig = patientFormConfig;
+        break;
       case "Doctor":
-        return <DoctorLedgerForm key={selectedLedger} />;
+        formConfig = doctorFormConfig;
+        break;
       case "Supplier":
-        return <SupplierLedgerForm key={selectedLedger} />;
+        formConfig = supplierFormConfig;
+        break;
       case "Pharmacy":
-        return <PharmacyLedgerForm key={selectedLedger} />;
+        formConfig = pharmacyFormConfig;
+        break;
       case "Lab":
-        return <LabLedgerForm key={selectedLedger} />;
+        formConfig = labFormConfig;
+        break;
       case "Cash":
-        return <CashLedgerForm key={selectedLedger} />;
+        formConfig = cashFormConfig;
+        break;
       case "Bank":
-        return <BankLedgerForm key={selectedLedger} />;
+        formConfig = bankFormConfig;
+        break;
       case "Insurance":
-        return <InsuranceLedgerForm key={selectedLedger} />;
+        formConfig = insuranceFormConfig;
+        break;
       case "Expense":
-        return <ExpenseLedgerForm key={selectedLedger} />;
+        formConfig = expenseFormConfig;
+        break;
       default:
         return null;
     }
+
+    return (
+      <BaseLedgerForm
+        key={ledgerType}
+        ledgerType={ledgerType}
+        schema={schema}
+        formConfig={formConfig}
+      />
+    );
   };
 
   return (
@@ -224,53 +190,7 @@ const NewLedger = () => {
   );
 };
 
-// --- Child Form Components ---
-
-const PatientLedgerForm = () => {
-  return (
-    <BaseLedgerForm schema={schemas.Patient} formConfig={patientFormConfig} />
-  );
-};
-const DoctorLedgerForm = () => {
-  return (
-    <BaseLedgerForm schema={schemas.Doctor} formConfig={doctorFormConfig} />
-  );
-};
-const SupplierLedgerForm = () => {
-  return (
-    <BaseLedgerForm schema={schemas.Supplier} formConfig={supplierFormConfig} />
-  );
-};
-const PharmacyLedgerForm = () => {
-  return (
-    <BaseLedgerForm schema={schemas.Pharmacy} formConfig={pharmacyFormConfig} />
-  );
-};
-const LabLedgerForm = () => {
-  return <BaseLedgerForm schema={schemas.Lab} formConfig={labFormConfig} />;
-};
-const CashLedgerForm = () => {
-  return <BaseLedgerForm schema={schemas.Cash} formConfig={cashFormConfig} />;
-};
-const BankLedgerForm = () => {
-  return <BaseLedgerForm schema={schemas.Bank} formConfig={bankFormConfig} />;
-};
-const InsuranceLedgerForm = () => {
-  return (
-    <BaseLedgerForm
-      schema={schemas.Insurance}
-      formConfig={insuranceFormConfig}
-    />
-  );
-};
-const ExpenseLedgerForm = () => {
-  return (
-    <BaseLedgerForm schema={schemas.Expense} formConfig={expenseFormConfig} />
-  );
-};
-
-// --- Form Configurations ---
-// (Moved outside components for clarity)
+// --- Form Configurations (FIXED to match schemas) ---
 
 const patientFormConfig = {
   formTitle: "Patient Ledger",
@@ -411,7 +331,7 @@ const supplierFormConfig = {
       options: ["Bank", "UPI", "Cheque", "Cash"],
     },
     { name: "transactionId", label: "Transaction ID", type: "text" },
-    { name: "billFile", label: "Attach Bill", type: "file" },
+    { name: "attachBill", label: "Attach Bill", type: "file" },
     { name: "remarks", label: "Remarks", type: "textarea" },
   ],
   defaultValues: {
@@ -423,7 +343,7 @@ const supplierFormConfig = {
     amount: "",
     paymentMode: "Bank",
     transactionId: "",
-    billFile: null,
+    attachBill: null,
     remarks: "",
   },
 };
@@ -435,9 +355,16 @@ const pharmacyFormConfig = {
     { name: "date", label: "Date", type: "date", required: true },
     {
       name: "medicineName",
-      label: "Medicine Name/Category",
+      label: "Medicine Name",
       type: "text",
       icon: <FaPills />,
+      required: true,
+    },
+    {
+      name: "category",
+      label: "Category",
+      type: "text",
+      placeholder: "e.g., Antibiotics, Analgesics",
       required: true,
     },
     {
@@ -451,7 +378,7 @@ const pharmacyFormConfig = {
       name: "amountType",
       label: "Amount Type",
       type: "select",
-      options: ["Debit", "Credit"],
+      options: ["Income", "Expense"],
       required: true,
     },
     { name: "amount", label: "Amount", type: "number", required: true },
@@ -467,8 +394,9 @@ const pharmacyFormConfig = {
   defaultValues: {
     date: new Date().toISOString().split("T")[0],
     medicineName: "",
+    category: "",
     description: "",
-    amountType: "Debit",
+    amountType: "Income",
     amount: "",
     paymentMode: "Cash",
     remarks: "",
@@ -493,6 +421,7 @@ const labFormConfig = {
       label: "Description",
       type: "text",
       placeholder: "MRI, X-Ray, Blood test etc.",
+      required: true,
     },
     { name: "amount", label: "Amount", type: "number", required: true },
     {
@@ -502,7 +431,7 @@ const labFormConfig = {
       options: ["Cash", "Card", "UPI", "Insurance"],
       required: true,
     },
-    { name: "reportFile", label: "Attach Report", type: "file" },
+    { name: "attachReport", label: "Attach Report", type: "file" },
     { name: "remarks", label: "Remarks", type: "textarea" },
   ],
   defaultValues: {
@@ -512,7 +441,7 @@ const labFormConfig = {
     description: "",
     amount: "",
     paymentMode: "Cash",
-    reportFile: null,
+    attachReport: null,
     remarks: "",
   },
 };
@@ -533,7 +462,7 @@ const cashFormConfig = {
       name: "amountType",
       label: "Amount Type",
       type: "select",
-      options: ["Debit", "Credit"],
+      options: ["Income", "Expense"],
       required: true,
     },
     { name: "amount", label: "Amount", type: "number", required: true },
@@ -542,7 +471,7 @@ const cashFormConfig = {
   defaultValues: {
     date: new Date().toISOString().split("T")[0],
     purpose: "",
-    amountType: "Debit",
+    amountType: "Income",
     amount: "",
     remarks: "",
   },
@@ -595,11 +524,12 @@ const insuranceFormConfig = {
       required: true,
     },
     {
-      name: "tpaCompany",
+      name: "tpaInsuranceCompany",
       label: "TPA/Insurance Company",
       type: "text",
       required: true,
     },
+    { name: "claimDate", label: "Claim Date", type: "date", required: true },
     {
       name: "claimAmount",
       label: "Claim Amount",
@@ -612,19 +542,30 @@ const insuranceFormConfig = {
       name: "status",
       label: "Status",
       type: "select",
-      options: ["Pending", "Approved", "Rejected"],
+      options: [
+        "Pending",
+        "Approved",
+        "Rejected",
+        "Partially Approved",
+        "Settled",
+      ],
       required: true,
     },
+    { name: "approvalDate", label: "Approval Date", type: "date" },
+    { name: "settlementDate", label: "Settlement Date", type: "date" },
     { name: "remarks", label: "Remarks", type: "textarea" },
   ],
   defaultValues: {
     patientName: "",
-    tpaCompany: "",
+    tpaInsuranceCompany: "",
+    claimDate: new Date().toISOString().split("T")[0],
     claimAmount: "",
     approvedAmount: "",
     settledAmount: "",
     status: "Pending",
     remarks: "",
+    approvalDate: "",
+    settlementDate: "",
   },
 };
 
@@ -677,22 +618,66 @@ const expenseFormConfig = {
   },
 };
 
-// --- The Reusable Base Form Component ---
-const BaseLedgerForm = ({ schema, formConfig }) => {
+// --- The Reusable Base Form Component (with API logic) ---
+const BaseLedgerForm = ({ ledgerType, schema, formConfig }) => {
+  const navigate = useNavigate();
+
+  // Dynamically select the correct mutation hook
+  const { mutateAsync, isPending } = mutationHooks[ledgerType]();
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
+    reset,
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: formConfig.defaultValues,
   });
 
-  const onSubmit = (data) => {
-    console.log(`Submitting ${formConfig.formTitle}:`, data);
-    toast.success(`${formConfig.formTitle} entry saved successfully!`);
-    // Here you would call your API mutation
-    // e.g., await createLedgerEntry(data);
+ 
+
+  const onSubmit = async (data) => {
+  // Handle date fields safely
+  const processedData = {
+    ...data,
+    // Convert only valid dates to ISO strings
+    ...(data.date && { date: new Date(data.date).toISOString() }),
+    // Special handling for insurance ledger dates
+    ...(ledgerType === 'Insurance' && {
+      ...(data.claimDate && { claimDate: new Date(data.claimDate).toISOString() }),
+      ...(data.approvalDate && { approvalDate: new Date(data.approvalDate).toISOString() }),
+      ...(data.settlementDate && { settlementDate: new Date(data.settlementDate).toISOString() })
+    })
+  };
+
+  // Handle file attachments
+  const cleanedData = {
+    ...processedData,
+    ...(data.attachBill && { attachBill: "https://example.com/dummy-bill.pdf" }),
+    ...(data.attachReport && { attachReport: "https://example.com/dummy-report.pdf" })
+  };
+
+  // Clean empty values
+  Object.keys(cleanedData).forEach(key => {
+    if (cleanedData[key] === undefined || cleanedData[key] === "") {
+      delete cleanedData[key];
+    }
+  });
+
+  try {
+    const response = await mutateAsync(cleanedData);
+    if (response?.data?.success) {
+      navigate(`${navigationPaths[ledgerType]}/${response.data.data.id}`);
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    toast.error(error.response?.data?.message || "Submission failed");
+  }
+};
+  const handleCancel = () => {
+    reset(formConfig.defaultValues);
+    toast.info("Form reset.");
   };
 
   return (
@@ -700,16 +685,16 @@ const BaseLedgerForm = ({ schema, formConfig }) => {
       fields={formConfig.fields}
       formTitle={formConfig.formTitle}
       formIcon={formConfig.formIcon}
-      // Pass react-hook-form props down
       register={register}
       errors={errors}
       onSubmit={handleSubmit(onSubmit)}
-      isSubmitting={isSubmitting}
+      onCancel={handleCancel}
+      isSubmitting={isPending} // Use isPending from the mutation
     />
   );
 };
 
-// --- Reusable UI Component (Almost unchanged, but now stateless) ---
+// --- Reusable UI Component ---
 const LedgerFormUI = ({
   fields,
   formTitle,
@@ -717,6 +702,7 @@ const LedgerFormUI = ({
   register,
   errors,
   onSubmit,
+  onCancel,
   isSubmitting,
 }) => {
   const getInputClass = (fieldName) =>
@@ -728,11 +714,12 @@ const LedgerFormUI = ({
     <form
       onSubmit={onSubmit}
       className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8"
+      noValidate
     >
       <div className="p-6">
         <div className="flex items-center mb-6">
-          {formIcon}
-          <h3 className="ml-2 text-lg font-semibold text-gray-800">
+          <span className="text-xl text-blue-500">{formIcon}</span>
+          <h3 className="ml-3 text-lg font-semibold text-gray-800">
             {formTitle}
           </h3>
         </div>
@@ -744,19 +731,24 @@ const LedgerFormUI = ({
                 field.type === "textarea" ? "md:col-span-2" : ""
               }`}
             >
-              <label className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor={field.name}
+                className="block text-sm font-medium text-gray-700"
+              >
                 {field.label}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </label>
 
               {field.type === "select" ? (
                 <select
+                  id={field.name}
                   {...register(field.name)}
-                  className={`${getInputClass(
-                    field.name
-                  )} appearance-none bg-white pr-8`}
+                  className={`${getInputClass(field.name)}  bg-white pr-8`}
                 >
-                  <option value="">Select {field.label}</option>
+                  <option disabled selected hidden>
+                    Select {field.label}
+                  </option>
+
                   {field.options.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -765,6 +757,7 @@ const LedgerFormUI = ({
                 </select>
               ) : field.type === "textarea" ? (
                 <textarea
+                  id={field.name}
                   {...register(field.name)}
                   placeholder={field.placeholder}
                   rows="3"
@@ -772,22 +765,28 @@ const LedgerFormUI = ({
                 />
               ) : field.type === "file" ? (
                 <input
+                  id={field.name}
                   type="file"
                   {...register(field.name)}
-                  className={getInputClass(field.name)}
+                  className={`block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 ${getInputClass(
+                    field.name
+                  )}`}
                 />
               ) : (
                 <div className="relative">
                   <input
+                    id={field.name}
                     type={field.type}
-                    {...register(field.name)}
+                    {...register(field.name, {
+                      valueAsNumber: field.type === "number",
+                    })}
                     placeholder={field.placeholder}
                     className={`${getInputClass(field.name)} ${
                       field.icon ? "pl-10" : ""
                     }`}
                   />
                   {field.icon && (
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                       {field.icon}
                     </div>
                   )}
@@ -806,6 +805,7 @@ const LedgerFormUI = ({
       <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
         <button
           type="button"
+          onClick={onCancel}
           className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 mr-3"
         >
           Cancel

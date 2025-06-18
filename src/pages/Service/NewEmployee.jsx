@@ -13,69 +13,17 @@ import {
 } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { toast } from "sonner"; // Assuming you use sonner for toasts
-
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import BackButton from "../../components/BackButton/BackButton";
-// Create or import these components as needed
-// import { useCreateEmployee } from "../../feature/hooks/useEmployees";
-// import LoadingButton from "../../components/LoadingButton/LoadingButton";
-
-// --- Mock Components for Demonstration ---
-// Replace these with your actual components.
-const useCreateEmployee = () => ({
-  mutateAsync: async (data) => {
-    console.log("Submitting to API:", data);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    // Simulate a successful response
-    return { success: true, message: "Employee created successfully!" };
-    // To test error case:
-    // throw new Error("Failed to create employee on the server.");
-  },
-  isPending: false, // You'd get this from your query hook
-});
-
-const LoadingButton = ({ isLoading, children, ...props }) => (
-  <button
-    {...props}
-    disabled={isLoading}
-    className="btn-primary disabled:bg-blue-400 disabled:cursor-not-allowed"
-  >
-    {isLoading ? "Saving..." : children}
-  </button>
-);
-// --- End Mock Components ---
-
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
-
-const employeeSchema = z.object({
-  employeeName: z.string().min(1, "Employee name is required"),
-  fathersName: z.string().min(1, "Father's name is required"),
-  photo: z
-    .any()
-    .refine((files) => files?.length === 1, "Photo is required.")
-    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 2MB.`)
-    .refine(
-      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-      "Only .jpg, .jpeg, and .png formats are supported."
-    ),
-  dateOfRegistration: z.string().min(1, "Date of registration is required"),
-  contactNo: z.string().regex(/^\d{10}$/, "Contact number must be 10 digits"),
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
-  email: z.string().email("Invalid email address"),
-  gender: z.enum(["Male", "Female"], {
-    errorMap: () => ({ message: "Please select a gender" }),
-  }),
-  maritalStatus: z.enum(["Married", "Unmarried"]).optional(),
-  aadharNo: z.string().regex(/^[0-9]{12}$/, "Aadhar number must be 12 digits"),
-  voterId: z.string().optional(),
-  bloodGroup: z.string().optional(),
-  department: z.string().min(1, "Department is required"),
-});
+import { useCreateEmployee } from "../../feature/transectionHooks/useEmployee";
+import LoadingButton from "../../components/LoadingButton/LoadingButton";
+import { employeeSchema } from "@hospital/schemas";
 
 const NewEmployee = () => {
+  const navigate = useNavigate();
+  const [previewPhoto, setPreviewPhoto] = useState(null);
+
   const {
     register,
     handleSubmit,
@@ -90,20 +38,19 @@ const NewEmployee = () => {
       contactNo: "",
       dateOfBirth: "",
       email: "",
-      gender: undefined,
-      maritalStatus: undefined,
+      gender: "Male",
+      maritalStatus: "Unmarried",
       aadharNo: "",
       voterId: "",
       bloodGroup: "",
       department: "",
+      photoUrl: "",
     },
   });
 
-  const { mutateAsync, isPending } = useCreateEmployee();
-
-  const [previewPhoto, setPreviewPhoto] = useState(null);
   const photoFile = watch("photo");
 
+  // Handle photo preview
   useEffect(() => {
     if (photoFile && photoFile.length > 0) {
       const file = photoFile[0];
@@ -117,6 +64,8 @@ const NewEmployee = () => {
     }
   }, [photoFile]);
 
+  const { mutateAsync, isPending } = useCreateEmployee();
+
   const bloodGroups = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
   const departments = [
     "General Medicine",
@@ -129,33 +78,40 @@ const NewEmployee = () => {
     "Radiology",
   ];
 
-  const onSubmit = async (data) => {
-    // The photo is a FileList, the backend will likely expect a file upload (FormData)
-    const formData = new FormData();
-    Object.keys(data).forEach(key => {
-        if (key === 'photo') {
-            formData.append(key, data[key][0]); // Append the file itself
-        } else {
-            formData.append(key, data[key]);
+ const onSubmit = async (data) => {
+    const payload = {
+        photoUrl: "https://example.com/image.jpg", // Dummy image URL
+        employeeName: data.employeeName,
+        fathersName: data.fathersName,
+        dateOfRegistration: new Date(data.dateOfRegistration).toISOString(),
+        contactNo: data.contactNo,
+        dateOfBirth: new Date(data.dateOfBirth).toISOString(),
+        email: data.email || "", // Handle optional field
+        gender: data.gender,
+        maritalStatus: data.maritalStatus,
+        aadharNo: data.aadharNo || "", // Handle optional field
+        voterId: data.voterId || "", // Handle optional field
+        bloodGroup: data.bloodGroup || "", // Handle optional field
+        department: data.department
+      };
+
+      const config = {
+        headers: {
+          'Content-Type': 'application/json'
         }
-    });
+      };
 
-    try {
-      const response = await mutateAsync(formData); // Pass FormData to your mutation
-      if (response.success) {
-        toast.success(response.message);
-        // reset(); // Optionally reset form on success
+      const response = await mutateAsync(payload, config);
+      
+      if (response?.data?.success) {
+       
+        navigate("/employee/:id");
       }
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to create employee");
-    }
-  };
-
+    } 
   const getInputClass = (fieldName) =>
     `block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
       errors[fieldName] ? "border-red-500" : "border-gray-300"
     }`;
-
 
   return (
     <div className="">
@@ -177,6 +133,7 @@ const NewEmployee = () => {
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+        encType="multipart/form-data"
       >
         <div className="p-6">
           <div className="flex items-center mb-6">
@@ -188,7 +145,7 @@ const NewEmployee = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Photo Upload */}
-            <div className="space-y-1 md:col-span-2 flex items-start">
+            {/* <div className="space-y-1 md:col-span-2 flex items-start">
               <div className="mr-4">
                 <div className="w-24 h-24 rounded-full bg-gray-200 border border-gray-300 overflow-hidden flex items-center justify-center">
                   {previewPhoto ? (
@@ -205,7 +162,6 @@ const NewEmployee = () => {
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Upload Photo
-                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 <input
                   type="file"
@@ -219,9 +175,24 @@ const NewEmployee = () => {
                     hover:file:bg-blue-100"
                 />
                 <p className="mt-1 text-xs text-gray-500">JPG, PNG up to 2MB</p>
-                {errors.photo && <p className="text-red-600 text-sm mt-1">{errors.photo.message}</p>}
+                {errors.photo && (
+                  <p className="text-red-600 text-sm mt-1">{errors.photo.message}</p>
+                )}
               </div>
-            </div>
+            </div> */}
+
+            <div className="space-y-1">
+        <label className="block text-sm font-medium text-gray-700">
+          Photo URL (Dummy)
+        </label>
+        <input
+          type="hidden"
+          {...register("photoUrl")}
+          value="https://example.com/image.jpg"
+        />
+        <p className="text-sm text-gray-500">Using placeholder image URL</p>
+      </div>
+
 
             {/* Employee Name */}
             <div className="space-y-1">
@@ -239,7 +210,9 @@ const NewEmployee = () => {
                   <FaUser className="text-gray-400" />
                 </div>
               </div>
-              {errors.employeeName && <p className="text-red-600 text-sm mt-1">{errors.employeeName.message}</p>}
+              {errors.employeeName && (
+                <p className="text-red-600 text-sm mt-1">{errors.employeeName.message}</p>
+              )}
             </div>
 
             {/* Father's Name */}
@@ -258,7 +231,9 @@ const NewEmployee = () => {
                   <FaUser className="text-gray-400" />
                 </div>
               </div>
-              {errors.fathersName && <p className="text-red-600 text-sm mt-1">{errors.fathersName.message}</p>}
+              {errors.fathersName && (
+                <p className="text-red-600 text-sm mt-1">{errors.fathersName.message}</p>
+              )}
             </div>
 
             {/* Date of Registration */}
@@ -276,7 +251,9 @@ const NewEmployee = () => {
                   <FaCalendarAlt className="text-gray-400" />
                 </div>
               </div>
-              {errors.dateOfRegistration && <p className="text-red-600 text-sm mt-1">{errors.dateOfRegistration.message}</p>}
+              {errors.dateOfRegistration && (
+                <p className="text-red-600 text-sm mt-1">{errors.dateOfRegistration.message}</p>
+              )}
             </div>
 
             {/* Contact No */}
@@ -295,7 +272,9 @@ const NewEmployee = () => {
                   <FaPhone className="text-gray-400" />
                 </div>
               </div>
-              {errors.contactNo && <p className="text-red-600 text-sm mt-1">{errors.contactNo.message}</p>}
+              {errors.contactNo && (
+                <p className="text-red-600 text-sm mt-1">{errors.contactNo.message}</p>
+              )}
             </div>
 
             {/* Date of Birth */}
@@ -307,19 +286,22 @@ const NewEmployee = () => {
                 <input
                   type="date"
                   {...register("dateOfBirth")}
+                  max={new Date().toISOString().split("T")[0]}
                   className={`${getInputClass("dateOfBirth")} pl-10`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaCalendarAlt className="text-gray-400" />
                 </div>
               </div>
-              {errors.dateOfBirth && <p className="text-red-600 text-sm mt-1">{errors.dateOfBirth.message}</p>}
+              {errors.dateOfBirth && (
+                <p className="text-red-600 text-sm mt-1">{errors.dateOfBirth.message}</p>
+              )}
             </div>
 
             {/* Email Address */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
-                Email Address<span className="text-red-500 ml-1">*</span>
+                Email Address
               </label>
               <div className="relative">
                 <input
@@ -332,7 +314,9 @@ const NewEmployee = () => {
                   <FaEnvelope className="text-gray-400" />
                 </div>
               </div>
-              {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>}
+              {errors.email && (
+                <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
+              )}
             </div>
 
             {/* Gender */}
@@ -359,14 +343,25 @@ const NewEmployee = () => {
                   />
                   <span className="ml-2 text-gray-700">Female</span>
                 </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    {...register("gender")}
+                    value="Other"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="ml-2 text-gray-700">Other</span>
+                </label>
               </div>
-              {errors.gender && <p className="text-red-600 text-sm mt-1">{errors.gender.message}</p>}
+              {errors.gender && (
+                <p className="text-red-600 text-sm mt-1">{errors.gender.message}</p>
+              )}
             </div>
 
             {/* Marital Status */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
-                Marital Status
+                Marital Status<span className="text-red-500 ml-1">*</span>
               </label>
               <div className="flex space-x-4 pt-2">
                 <label className="inline-flex items-center">
@@ -388,13 +383,15 @@ const NewEmployee = () => {
                   <span className="ml-2 text-gray-700">Unmarried</span>
                 </label>
               </div>
-               {errors.maritalStatus && <p className="text-red-600 text-sm mt-1">{errors.maritalStatus.message}</p>}
+              {errors.maritalStatus && (
+                <p className="text-red-600 text-sm mt-1">{errors.maritalStatus.message}</p>
+              )}
             </div>
 
             {/* Aadhar No */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
-                Aadhar No<span className="text-red-500 ml-1">*</span>
+                Aadhar No
               </label>
               <div className="relative">
                 <input
@@ -407,7 +404,9 @@ const NewEmployee = () => {
                   <FaIdCard className="text-gray-400" />
                 </div>
               </div>
-              {errors.aadharNo && <p className="text-red-600 text-sm mt-1">{errors.aadharNo.message}</p>}
+              {errors.aadharNo && (
+                <p className="text-red-600 text-sm mt-1">{errors.aadharNo.message}</p>
+              )}
             </div>
 
             {/* Voter ID */}
@@ -426,7 +425,9 @@ const NewEmployee = () => {
                   <FaIdCard className="text-gray-400" />
                 </div>
               </div>
-              {errors.voterId && <p className="text-red-600 text-sm mt-1">{errors.voterId.message}</p>}
+              {errors.voterId && (
+                <p className="text-red-600 text-sm mt-1">{errors.voterId.message}</p>
+              )}
             </div>
 
             {/* Blood Group */}
@@ -437,20 +438,24 @@ const NewEmployee = () => {
               <div className="relative">
                 <select
                   {...register("bloodGroup")}
-                  className={`${getInputClass("bloodGroup")} appearance-none bg-white pr-8 pl-10`}
+                  className={`${getInputClass("bloodGroup")} bg-white pr-8 pl-10`}
                 >
                   <option value="">Select blood group</option>
                   {bloodGroups.map((group) => (
-                    <option key={group} value={group}>{group}</option>
+                    <option key={group} value={group}>
+                      {group}
+                    </option>
                   ))}
                 </select>
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaTint className="text-gray-400" />
                 </div>
               </div>
-              {errors.bloodGroup && <p className="text-red-600 text-sm mt-1">{errors.bloodGroup.message}</p>}
+              {errors.bloodGroup && (
+                <p className="text-red-600 text-sm mt-1">{errors.bloodGroup.message}</p>
+              )}
             </div>
-            
+
             {/* Department */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
@@ -459,18 +464,22 @@ const NewEmployee = () => {
               <div className="relative">
                 <select
                   {...register("department")}
-                  className={`${getInputClass("department")} appearance-none bg-white pr-8 pl-10`}
+                  className={`${getInputClass("department")} bg-white pr-8 pl-10`}
                 >
                   <option value="">Select department</option>
                   {departments.map((dept) => (
-                    <option key={dept} value={dept}>{dept}</option>
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
                   ))}
                 </select>
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaBuilding className="text-gray-400" />
                 </div>
               </div>
-              {errors.department && <p className="text-red-600 text-sm mt-1">{errors.department.message}</p>}
+              {errors.department && (
+                <p className="text-red-600 text-sm mt-1">{errors.department.message}</p>
+              )}
             </div>
           </div>
         </div>

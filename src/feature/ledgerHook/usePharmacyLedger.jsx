@@ -8,6 +8,9 @@ import {
   updatePharmacyLedgerEntryAPI,
   deletePharmacyLedgerEntryAPI,
 } from "../ledgerApi/pharmacyLedgerApi";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../utils/errorUtils";
+
 
 export const useGetPharmacyLedgerEntries = () => {
   return useQuery({
@@ -16,8 +19,11 @@ export const useGetPharmacyLedgerEntries = () => {
       const { data } = await getAllPharmacyLedgerEntriesAPI();
       return data.data;
     },
+    select: (data) => data || [],
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
+
 
 export const useGetPharmacyLedgerEntryById = (id) => {
   return useQuery({
@@ -27,8 +33,10 @@ export const useGetPharmacyLedgerEntryById = (id) => {
       return data.data;
     },
     enabled: !!id,
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
+
 
 export const useGetPharmacyFinancialSummary = () => {
   return useQuery({
@@ -37,8 +45,11 @@ export const useGetPharmacyFinancialSummary = () => {
       const { data } = await getPharmacyFinancialSummaryAPI();
       return data.data;
     },
+    select: (data) => data || {},
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
+
 
 export const useGetPharmacyCategorySummary = () => {
   return useQuery({
@@ -47,26 +58,34 @@ export const useGetPharmacyCategorySummary = () => {
       const { data } = await getPharmacyCategorySummaryAPI();
       return data.data;
     },
+    select: (data) => data || [],
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
+
 
 export const useCreatePharmacyLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createPharmacyLedgerEntryAPI,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.data?.message || "Entry created successfully");
       queryClient.invalidateQueries({ queryKey: ["pharmacyLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
+
 
 export const useUpdatePharmacyLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => updatePharmacyLedgerEntryAPI(id, data),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.data?.message || "Entry updated successfully");
       queryClient.invalidateQueries({ queryKey: ["pharmacyLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -74,8 +93,10 @@ export const useDeletePharmacyLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deletePharmacyLedgerEntryAPI,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.data?.message || "Entry deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["pharmacyLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };

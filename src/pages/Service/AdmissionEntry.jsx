@@ -19,43 +19,9 @@ import BackButton from "../../components/BackButton/BackButton";
 import { toast } from "sonner";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
 import { useCreateAdmission } from "../../feature/hooks/useAdmisson";
+import { useNavigate } from "react-router-dom";
 
-const schema = z.object({
-  admissionDate: z.string().min(1, "Admission date is required"),
-  admissionTime: z.string().min(1, "Admission time is required"),
-  dischargeDate: z.string().optional(),
-  gsRsRegNo: z.string().min(1, "Registration number is required"),
-  wardNo: z.string().min(1, "Ward number is required"),
-  bedNo: z.string().min(1, "Bed number is required"),
-  bloodGroup: z.string().min(1, "Blood group is required"),
-  aadhaarNo: z.string().length(12, "Aadhaar number must be exactly 12 digits"),
-  urnNo: z.string().min(1, "URN no. is required"),
-  patientName: z.string().min(1, "Patient name is required"),
-  patientAge: z
-    .number({ invalid_type_error: "Age must be a number" })
-    .min(1, "Age is required")
-    .int("Age must be an integer")
-    .min(0, "Age must be positive")
-    .max(120, "Age must be reasonable"),
-  patientSex: z.string().min(1, "Patient sex is required"),
-  guardianType: z.string().min(1, "Guardian type is required"),
-  guardianName: z.string().min(1, "Guardian name is required"),
-  phoneNo: z
-    .string()
-    .min(10, "Phone number must be at least 10 digits")
-    .max(15, "Phone number must be at most 15 digits"),
-  patientAddress: z.string().min(1, "Patient address is required"),
-  bodyWeight: z
-    .number({ invalid_type_error: "Weight must be a number" })
-    .min(0, "Weight must be positive"),
-  bodyHeight: z
-    .number({ invalid_type_error: "Height must be a number" })
-    .min(0, "Height must be positive"),
-  literacy: z.string().min(1, "Literacy is required"),
-  occupation: z.string().min(1, "Occupation is required"),
-  doctorName: z.string().min(1, "Doctor name is required"),
-  delivery: z.boolean(),
-});
+import { admissionSchema } from "@hospital/schemas";
 
 const formFields = [
   {
@@ -187,14 +153,14 @@ const formFields = [
       {
         label: "Body Weight (kg)",
         type: "number",
-        name: "bodyWeight",
+        name: "bodyWeightKg",
         placeholder: "Enter body weight",
         icon: <FaWeight className="text-gray-400" />,
       },
       {
         label: "Body Height (cm)",
         type: "number",
-        name: "bodyHeight",
+        name: "bodyHeightCm",
         placeholder: "Enter body height",
         icon: <FaRulerVertical className="text-gray-400" />,
       },
@@ -228,7 +194,7 @@ const formFields = [
       {
         label: "Delivery",
         type: "checkbox",
-        name: "delivery",
+        name: "isDelivery",
         text: "Check if admission is for delivery",
       },
     ],
@@ -236,52 +202,66 @@ const formFields = [
 ];
 
 const AdmissionEntry = () => {
+  const navigate = useNavigate();
+
+  const optionalFields = [
+    "dischargeDate",
+    "urnNo",
+    "bodyWeightKg",
+    "bodyHeightCm",
+  ];
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(admissionSchema),
     defaultValues: {
-      admissionDate: "", // string
-      admissionTime: "", // string
-      dischargeDate: "", // string, optional but keep empty string by default
-      gsRsRegNo: "", // string
-      wardNo: "", // string
-      bedNo: "", // string
-      bloodGroup: "", // string
-      aadhaarNo: "", // string of length 12
-      urnNo: "", // string, optional
-      patientName: "", // string
-      patientAge: 0, // number
-      patientSex: "", // string
-      guardianType: "", // string
-      guardianName: "", // string
-      phoneNo: "", // string
-      patientAddress: "", // string
-      bodyWeight: 0, // number
-      bodyHeight: 0, // number
-      literacy: "", // string
-      occupation: "", // string
-      doctorName: "", // string
-      delivery: false,
+      admissionDate: "",
+      admissionTime: "",
+      dischargeDate: "",
+      gsRsRegNo: "",
+      wardNo: "",
+      bedNo: "",
+      bloodGroup: "",
+      aadhaarNo: "",
+      urnNo: "",
+      patientName: "",
+      patientAge: 0,
+      patientSex: "",
+      guardianType: "",
+      guardianName: "",
+      phoneNo: "",
+      patientAddress: "",
+      bodyWeightKg: 0,
+      bodyHeightCm: 0,
+      literacy: "",
+      occupation: "",
+      doctorName: "",
+      isDelivery: false,
     },
   });
 
+  const { mutateAsync, isPending } = useCreateAdmission();
 
-   const { mutateAsync, isLoading } = useCreateAdmission();
+  const onSubmit = async (formData) => {
+    const submissionData = {
+      ...formData,
+      admissionDate: new Date(formData.admissionDate),
+      dischargeDate: formData.dischargeDate
+        ? new Date(formData.dischargeDate)
+        : undefined,
+    };
 
-   const onSubmit = async (data) => {
-    try {
-      await mutateAsync(data);
-      toast.success("Admission created successfully!");
-      reset(); 
-    } catch (error) {
-      toast.error("Failed to create admission. Please try again.");
+    const response = await mutateAsync(submissionData);
+
+    if (response?.data?.success) {
+      toast.success(response?.data?.message);
+      navigate(`/admission/${response.data.data.id}`);
     }
   };
-
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -332,9 +312,10 @@ const AdmissionEntry = () => {
                   >
                     <label className="block text-sm font-medium text-gray-700">
                       {field.label}
-                      {field.type !== "checkbox" && (
-                        <span className="text-red-500 ml-1">*</span>
-                      )}
+                      {field.type !== "checkbox" &&
+                        !optionalFields.includes(field.name) && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
                     </label>
 
                     {field.type === "select" ? (
@@ -346,7 +327,9 @@ const AdmissionEntry = () => {
                           }`}
                           aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
+                          <option value="" disabled selected hidden>
+                            {field.placeholder}
+                          </option>
                           {field.options.map((option, i) => (
                             <option key={i} value={option}>
                               {option}
@@ -428,7 +411,7 @@ const AdmissionEntry = () => {
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
           <LoadingButton isLoading={isPending} type="submit">
-            Submit Admission
+            {isPending ? "Submitting..." : "Submit Admission"}
           </LoadingButton>
         </div>
       </form>

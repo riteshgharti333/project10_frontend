@@ -10,7 +10,7 @@ export const getBedAssignmentByIdAPI = (id) =>
   axiosInstance.get(`/bed-assign/${id}`);
 
 export const updateBedAssignmentAPI = (id, data) =>
-  axiosInstance.patch(`/bed-assign/${id}`, data);
+  axiosInstance.put(`/bed-assign/${id}`, data);
 
 export const deleteBedAssignmentAPI = (id) =>
   axiosInstance.delete(`/bed-assign/${id}`);

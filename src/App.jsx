@@ -50,8 +50,8 @@ import NewBillEntry from "./pages/Service/NewBillEntry";
 import NewMoneyReceiptEntry from "./pages/Service/NewMoneyReceiptEntry";
 import BillTable from "./pages/TableData/BillTable";
 import MoneyReceiptTable from "./pages/TableData/MoneyReceiptTable";
-import VoucharTable from "./pages/TableData/VoucharTable";
-import NewVouchar from "./pages/Service/NewVouchar";
+import VoucherTable from "./pages/TableData/VoucherTable";
+import NewVoucher from "./pages/Service/NewVoucher";
 import EmployeeTable from "./pages/TableData/EmployeeTable";
 import NewEmployee from "./pages/Service/NewEmployee";
 import PurchaseReportTable from "./pages/TableData/PurchaseReportTable";
@@ -77,14 +77,15 @@ import EditLedger from "./pages/UpdateData/EditLedger";
 import EditXray from "./pages/UpdateData/EditXray";
 import EditBrand from "./pages/UpdateData/EditBrand";
 import EditProduct from "./pages/UpdateData/EditProduct";
-import EditSubProduct from "./pages/UpdateData/EditSubProduct";
+import EditProductEntry from "./pages/UpdateData/EditProductEntry";
 import EditBill from "./pages/UpdateData/EditBill";
 import EditMoneyReceipt from "./pages/UpdateData/EditMoneyReceipt";
-import EditVouchar from "./pages/UpdateData/EditVouchar";
+import EditVoucher from "./pages/UpdateData/EditVoucher";
 import EditEmployee from "./pages/UpdateData/EditEmployee";
 import Login from "./pages/Auth/Login";
 import Profile from "./pages/Auth/Profile";
 import { Toaster } from "sonner";
+import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
 
 
 
@@ -97,7 +98,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
 
-          <Route element={<Layout />}>
+         <Route element={<PrivateRoute />}>
+           <Route element={<Layout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
@@ -151,7 +153,7 @@ function App() {
             {/* Doctors */}
             <Route path="/doctors" element={<DoctorTable />} />
             <Route path="/new-doctor" element={<NewDoctor />} />
-            <Route path="/docter/:id" element={<EditDocter />} />
+            <Route path="/doctor/:id" element={<EditDocter />} />
 
             {/* Pharmacist */}
             <Route path="/pharmacists" element={<PharmacistTable />} />
@@ -192,7 +194,7 @@ function App() {
               element={<PharmacyLedger />}
             />
             <Route
-              path="ledger/lab-diagnostics-ledger"
+              path="ledger/lab-ledger"
               element={<DiagnosticsLedger />}
             />
             <Route path="/ledger/cash-ledger" element={<CashLedger />} />
@@ -202,7 +204,7 @@ function App() {
               element={<InsuranceTPALedger />}
             />
             <Route
-              path="/ledger/general-expense-ledger"
+              path="/ledger/expense-ledger"
               element={<GeneralExpenseLedger />}
             />
 
@@ -217,7 +219,7 @@ function App() {
 
             <Route path="/add-product" element={<ProductEntryTable />} />
             <Route path="/new-product-entry" element={<NewProductEntry />} />
-            <Route path="/sub-product/:id" element={<EditSubProduct />} />
+            <Route path="/sub-product/:id" element={<EditProductEntry />} />
             <Route path="/all-products" element={<AllProductTable />} />
             <Route
               path="/service-charges-update"
@@ -236,9 +238,9 @@ function App() {
             />
             <Route path="/money-receipt/:id" element={<EditMoneyReceipt />} />
 
-            <Route path="/payment-vouchars" element={<VoucharTable />} />
-            <Route path="/new-vouchar" element={<NewVouchar />} />
-            <Route path="/vouchar/:id" element={<EditVouchar />} />
+            <Route path="/payment-vouchers" element={<VoucherTable />} />
+            <Route path="/new-voucher" element={<NewVoucher />} />
+            <Route path="/voucher/:id" element={<EditVoucher />} />
 
             <Route path="/employees" element={<EmployeeTable />} />
             <Route path="/new-employee" element={<NewEmployee />} />
@@ -259,6 +261,7 @@ function App() {
             <Route path="/view-money-receipts" element={<ViewReceiptTable />} />
             <Route path="/discharge-lists" element={<DischargeTable />} />
           </Route>
+         </Route>
         </Routes>
       </BrowserRouter>
 

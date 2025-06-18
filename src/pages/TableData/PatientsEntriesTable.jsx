@@ -2,14 +2,12 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
 import Table from "../../components/Table/Table";
-import { birthData, dummyPatients, patientData } from "../../assets/tableData";
 import { useGetPatients } from "../../feature/hooks/usePatient";
 import Loader from "../../components/Loader/Loader";
 
 const PatientsEntriesTable = () => {
-  const { data, error, isLoading, isError } = useGetPatients();
+  const { data, isLoading } = useGetPatients();
 
-  console.log(data);
 
   const columns = useMemo(
     () => [

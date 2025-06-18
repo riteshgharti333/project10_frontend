@@ -6,6 +6,8 @@ import {
   updateProductAPI,
   deleteProductAPI,
 } from "../itemApi/productApi";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../utils/errorUtils";
 
 export const useGetProducts = () => {
   return useQuery({
@@ -14,6 +16,8 @@ export const useGetProducts = () => {
       const { data } = await getAllProductsAPI();
       return data.data;
     },
+    select: (data) => data || [],
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -25,6 +29,7 @@ export const useGetProductById = (id) => {
       return data.data;
     },
     enabled: !!id,
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -32,9 +37,11 @@ export const useCreateProduct = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createProductAPI,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.data?.message || "Product created successfully");
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -42,9 +49,11 @@ export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => updateProductAPI(id, data),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.data?.message || "Product updated successfully");
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -52,8 +61,10 @@ export const useDeleteProduct = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteProductAPI,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.data?.message || "Product deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };

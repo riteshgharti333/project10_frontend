@@ -7,6 +7,8 @@ import {
   updateDiagnosticsLedgerEntryAPI,
   deleteDiagnosticsLedgerEntryAPI,
 } from "../ledgerApi/diagnosticsLedgerApi";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../utils/errorUtils";
 
 export const useGetDiagnosticsLedgerEntries = () => {
   return useQuery({
@@ -15,6 +17,8 @@ export const useGetDiagnosticsLedgerEntries = () => {
       const { data } = await getAllDiagnosticsLedgerEntriesAPI();
       return data.data;
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
+    select: (data) => data || [],
   });
 };
 
@@ -26,6 +30,7 @@ export const useGetDiagnosticsLedgerEntryById = (id) => {
       return data.data;
     },
     enabled: !!id,
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -36,6 +41,8 @@ export const useGetDiagnosticsTotalRecord = () => {
       const { data } = await getDiagnosticsTotalRecordAPI();
       return data.data;
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
+    select: (data) => data ?? 0,
   });
 };
 
@@ -43,9 +50,11 @@ export const useCreateDiagnosticsLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createDiagnosticsLedgerEntryAPI,
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.data?.message || "Diagnostics ledger entry created successfully");
       queryClient.invalidateQueries({ queryKey: ["diagnosticsLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -53,9 +62,11 @@ export const useUpdateDiagnosticsLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => updateDiagnosticsLedgerEntryAPI(id, data),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.data?.message || "Diagnostics ledger entry updated successfully");
       queryClient.invalidateQueries({ queryKey: ["diagnosticsLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -63,8 +74,10 @@ export const useDeleteDiagnosticsLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteDiagnosticsLedgerEntryAPI,
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.data?.message || "Diagnostics ledger entry deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["diagnosticsLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };

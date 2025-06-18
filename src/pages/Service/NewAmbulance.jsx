@@ -7,18 +7,12 @@ import { z } from "zod";
 import BackButton from "../../components/BackButton/BackButton";
 import { toast } from "sonner";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
-
-const ambulanceSchema = z.object({
-  modelName: z.string().min(1, "Model name is required"),
-  cardBrand: z.string().min(1, "Brand is required"),
-  registerNo: z.string().min(1, "Registration number is required"),
-  driverName: z.string().min(1, "Driver name is required"),
-  driverContact: z.string().min(10, "Driver contact must be at least 10 digits"),
-  status: z.enum(["Active", "Inactive", "Under Maintenance"]).default("Active"),
-});
+import { ambulanceSchema } from "@hospital/schemas";
+import { useCreateAmbulance } from "../../feature/hooks/useAmbulance";
+import { useNavigate } from "react-router-dom";
 
 const cardBrands = ["TATA", "Mahindra", "Force", "Toyota", "Ford", "Others"];
-const statusOptions = ["Active", "Inactive", "Under Maintenance"];
+const statusOptions = ["Available", "On-Call", "Maintenance"];
 
 const formFields = [
   {
@@ -35,14 +29,14 @@ const formFields = [
       {
         label: "Brand",
         type: "select",
-        name: "cardBrand",
+        name: "brand",
         placeholder: "Select Brand",
         options: cardBrands,
       },
       {
         label: "Registration No.",
         type: "text",
-        name: "registerNo",
+        name: "registrationNo",
         placeholder: "Enter registration number",
         icon: <FaIdCard className="text-gray-400" />,
       },
@@ -72,6 +66,7 @@ const formFields = [
 ];
 
 const NewAmbulance = () => {
+   const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -81,31 +76,21 @@ const NewAmbulance = () => {
     resolver: zodResolver(ambulanceSchema),
     defaultValues: {
       modelName: "",
-      cardBrand: "",
+      brand: "",
       registerNo: "",
       driverName: "",
       driverContact: "",
-      status: "Active",
+      status: "Available",
     },
   });
 
-  const [isPending, setIsPending] = React.useState(false);
+  const { mutateAsync, isPending } = useCreateAmbulance();
 
   const onSubmit = async (data) => {
-    try {
-      setIsPending(true);
-      // Replace with your actual API call
-      // const response = await createAmbulance(data);
-      // Simulating API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      toast.success("Ambulance created successfully");
-      reset();
-    } catch (error) {
-      console.error(error);
-      toast.error(error?.response?.data?.message || "Failed to create ambulance");
-    } finally {
-      setIsPending(false);
+    const response = await mutateAsync(data);
+
+    if (response?.data?.success) {
+      navigate("/ambulance/:id");
     }
   };
 
@@ -156,9 +141,10 @@ const NewAmbulance = () => {
                   >
                     <label className="block text-sm font-medium text-gray-700">
                       {field.label}
-                      {field.type !== "select" && field.name !== "driverContact" && (
-                        <span className="text-red-500 ml-1">*</span>
-                      )}
+                      {field.type !== "select" &&
+                        field.name !== "driverContact" && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
                     </label>
 
                     {field.type === "select" ? (
@@ -170,7 +156,9 @@ const NewAmbulance = () => {
                           }`}
                           aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
+                          <option value="" disabled selected hidden>
+                                                     {field.placeholder}
+                                                   </option>
                           {field.options.map((option, i) => (
                             <option key={i} value={option}>
                               {option}

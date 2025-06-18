@@ -1,109 +1,94 @@
-import React, { useState } from 'react';
-import { FaBox, FaTrash, FaPlus } from 'react-icons/fa';
-import BackButton from '../../components/BackButton/BackButton';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React from "react";
+import { FaBox, FaTrash, FaPlus } from "react-icons/fa";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import BackButton from "../../components/BackButton/BackButton";
+import LoadingButton from "../../components/LoadingButton/LoadingButton";
+import { useCreateProductEntry } from "../../feature/itemHooks/useSubProduct";
 
-// Define Zod schemas
-const materialSpecSchema = z.object({
-  uom: z.string().min(1, "UOM is required"),
-  description: z.string().optional(),
-  alterUnit: z.string().optional(),
-  alterUnitValue: z.number().optional(),
-  serialUniqueNo: z.string().optional(),
-});
-
-const productSchema = z.object({
-  brand: z.string().min(1, "Brand is required"),
-  category: z.string().min(1, "Category is required"),
-  productName: z.string().min(1, "Product name is required"),
-  shortDesc: z.string().optional(),
-  hsnCode: z.string().min(1, "HSN Code is required"),
-  gst: z.string().min(1, "GST is required"),
-  specifications: z.array(materialSpecSchema).min(1, "At least one material specification is required"),
-});
+import { materialSpecSchema } from "@hospital/schemas";
+import { productMaterialSchema } from "@hospital/schemas";
 
 const NewProductEntry = () => {
-  // Sample data for dropdowns
-  const brands = ['Brand A', 'Brand B', 'Brand C', 'Brand D'];
-  const categories = ['Medicines', 'Equipment', 'Disposables', 'Surgical'];
-  const gstOptions = ['0%', '5%', '12%', '18%', '28%'];
-  const uomOptions = ['Nos', 'Box', 'Kg', 'Ltr', 'Meter', 'Set'];
-  const alterUnitOptions = ['Nos', 'Box', 'Kg', 'Ltr', 'Meter', 'Set'];
+  const navigate = useNavigate();
+  const { mutateAsync, isPending } = useCreateProductEntry();
 
-  // Main form state
-  const [materials, setMaterials] = useState([
-    {
-      id: Date.now(),
-      uom: '',
-      description: '',
-      alterUnit: '',
-      alterUnitValue: '',
-      serialUniqueNo: '',
-    },
-  ]);
+  // Sample data - in a real app, this would likely come from an API
+  const brands = ["Brand A", "Brand B", "Brand C", "Brand D"];
+  const categories = ["Medicines", "Equipment", "Disposables", "Surgical"];
+  const gstOptions = ["0", "5", "12", "18", "28"];
+  const uomOptions = ["Nos", "Box", "Kg", "Ltr", "Meter", "Set"];
 
   const {
     register,
     handleSubmit,
-    setValue,
+    control,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productMaterialSchema),
     defaultValues: {
-      brand: '',
-      category: '',
-      productName: '',
-      shortDesc: '',
-      hsnCode: '',
-      gst: '',
-      specifications: materials,
+      brand: "",
+      category: "",
+      productName: "",
+      shortDescription: "",
+      hsnCode: "",
+      gstPercentage: "",
+      status: "Active",
+      specifications: [
+        {
+          uom: "",
+          description: "",
+          alterUnit: "",
+          alterUnitValue: "",
+          serialUniqueNo: "",
+        },
+      ],
     },
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setValue(name, value);
-  };
-
-  const handleMaterialChange = (id, e) => {
-    const { name, value } = e.target;
-    setMaterials(prev =>
-      prev.map(material =>
-        material.id === id ? { ...material, [name]: value } : material
-      )
-    );
-  };
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "specifications",
+  });
 
   const addMaterial = () => {
-    setMaterials(prev => [
-      ...prev,
-      {
-        id: Date.now(),
-        uom: '',
-        description: '',
-        alterUnit: '',
-        alterUnitValue: '',
-        serialUniqueNo: '',
-      },
-    ]);
+    append({
+      uom: "",
+      description: "",
+      alterUnit: "",
+      alterUnitValue: "",
+      serialUniqueNo: "",
+    });
   };
 
-  const removeMaterial = (id) => {
-    if (materials.length > 1) {
-      setMaterials(prev => prev.filter(material => material.id !== id));
+  const removeMaterial = (index) => {
+    if (fields.length > 1) {
+      remove(index);
+    } else {
+      toast.error("At least one material specification is required.");
     }
   };
 
-  const handleSubmitForm = (data) => {
-    const productEntry = {
-      ...data,
-      specifications: materials,
-    };
-    console.log('Product Entry:', productEntry);
-    // Submit logic here
+  const onSubmit = async (data) => {
+    console.log(data)
+    if (data.specifications && data.specifications.every(spec => 
+    !spec.uom && !spec.description && !spec.alterUnit && 
+    !spec.alterUnitValue && !spec.serialUniqueNo
+  )) {
+    data.specifications = undefined;
+  }
+    const response = await mutateAsync(data);
+    if (response?.data?.success) {
+      const newEntryId = response.data.data.id;
+      navigate(`/product-entry/${newEntryId}`);
+    }
   };
+
+  const renderError = (error) =>
+    error && <p className="text-red-600 text-sm mt-1">{error.message}</p>;
 
   return (
     <div className="mx-auto">
@@ -123,10 +108,10 @@ const NewProductEntry = () => {
       </div>
 
       <form
-        onSubmit={handleSubmit(handleSubmitForm)}
+        onSubmit={handleSubmit(onSubmit)}
         className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+        noValidate
       >
-        {/* Product Information Section */}
         <div className="p-6">
           <div className="flex items-center mb-6">
             <FaBox className="text-blue-500" />
@@ -134,120 +119,128 @@ const NewProductEntry = () => {
               Product Information
             </h3>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Brand */}
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Brand <span className="text-red-500 ml-1">*</span>
               </label>
               <select
                 {...register("brand")}
-                onChange={handleChange}
-                className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${errors.brand ? 'border-red-500' : ''}`}
-                
+                className={`block w-full px-4 py-2 border rounded-lg bg-white ${
+                  errors.brand ? "border-red-500" : "border-gray-300"
+                }`}
               >
-                <option value="">Select Brand</option>
-                {brands.map((brand, index) => (
-                  <option key={index} value={brand}>
+                <option value="" disabled selected hidden>
+                  Select Brand
+                </option>
+                {brands.map((brand) => (
+                  <option key={brand} value={brand}>
                     {brand}
                   </option>
                 ))}
               </select>
-              {errors.brand && <p className="text-red-600 text-sm">{errors.brand.message}</p>}
+              {renderError(errors.brand)}
             </div>
-
-            {/* Category */}
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Category <span className="text-red-500 ml-1">*</span>
               </label>
               <select
                 {...register("category")}
-                onChange={handleChange}
-                className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${errors.category ? 'border-red-500' : ''}`}
-                
+                className={`block w-full px-4 py-2 border rounded-lg bg-white ${
+                  errors.category ? "border-red-500" : "border-gray-300"
+                }`}
               >
-                <option value="">Select Category</option>
-                {categories.map((category, index) => (
-                  <option key={index} value={category}>
+                <option value="" disabled selected hidden>Select Category</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
                     {category}
                   </option>
                 ))}
               </select>
-              {errors.category && <p className="text-red-600 text-sm">{errors.category.message}</p>}
+              {renderError(errors.category)}
             </div>
-
-            {/* Product Name */}
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Product Name <span className="text-red-500 ml-1">*</span>
               </label>
               <input
                 type="text"
                 {...register("productName")}
-                onChange={handleChange}
                 placeholder="Enter product name"
-                className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${errors.productName ? 'border-red-500' : ''}`}
-                
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.productName ? "border-red-500" : "border-gray-300"
+                }`}
               />
-              {errors.productName && <p className="text-red-600 text-sm">{errors.productName.message}</p>}
+              {renderError(errors.productName)}
             </div>
-
-            {/* Short Description */}
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Short Description
               </label>
               <input
                 type="text"
-                {...register("shortDesc")}
-                onChange={handleChange}
+                {...register("shortDescription")}
                 placeholder="Enter short description"
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.shortDescription ? "border-red-500" : "border-gray-300"
+                }`}
               />
+              {renderError(errors.shortDescription)}
             </div>
-
-            {/* HSN Code */}
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 HSN Code <span className="text-red-500 ml-1">*</span>
               </label>
               <input
                 type="text"
                 {...register("hsnCode")}
-                onChange={handleChange}
                 placeholder="Enter HSN code"
-                className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${errors.hsnCode ? 'border-red-500' : ''}`}
-                
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.hsnCode ? "border-red-500" : "border-gray-300"
+                }`}
               />
-              {errors.hsnCode && <p className="text-red-600 text-sm">{errors.hsnCode.message}</p>}
+              {renderError(errors.hsnCode)}
             </div>
-
-            {/* GST */}
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 GST(%) <span className="text-red-500 ml-1">*</span>
               </label>
               <select
-                {...register("gst")}
-                onChange={handleChange}
-                className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${errors.gst ? 'border-red-500' : ''}`}
-                
+                {...register("gstPercentage")}
+                className={`block w-full px-4 py-2 border rounded-lg bg-white ${
+                  errors.gstPercentage ? "border-red-500" : "border-gray-300"
+                }`}
               >
-                <option value="">Select GST %</option>
-                {gstOptions.map((gst, index) => (
-                  <option key={index} value={gst}>
-                    {gst}
-                  </option>
-                ))}
+                <option value="" disabled selected hidden>
+                  Select GST %
+                </option>
+                {gstOptions.map((gst) => (
+  <option key={gst} value={gst}> {/* Convert to string */}
+    {gst}%
+  </option>
+))}
               </select>
-              {errors.gst && <p className="text-red-600 text-sm">{errors.gst.message}</p>}
+              {renderError(errors.gstPercentage)}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Status
+              </label>
+              <select
+                {...register("status")}
+                className={`block w-full px-4 py-2 border rounded-lg bg-white ${
+                  errors.status ? "border-red-500" : "border-gray-300"
+                }`}
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+              {renderError(errors.status)}
             </div>
           </div>
         </div>
 
-        {/* Materials Section */}
         <div className="p-6 border-t border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
@@ -259,130 +252,133 @@ const NewProductEntry = () => {
             <button
               type="button"
               onClick={addMaterial}
-              className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+              className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
             >
               <FaPlus className="mr-1" /> Add Material
             </button>
           </div>
+          {renderError(errors.specifications?.root)}
 
-          {materials.map((material, index) => (
+          {fields.map((field, index) => (
             <div
-              key={material.id}
-              className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6 p-4 bg-gray-50 rounded-lg"
+              key={field.id}
+              className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4 p-4 bg-gray-50 rounded-lg border"
             >
-              {/* UOM */}
-              <div className="space-y-1">
+              <div>
                 <label className="block text-sm font-medium text-gray-700">
                   UOM <span className="text-red-500 ml-1">*</span>
                 </label>
                 <select
-                  name="uom"
-                  value={material.uom}
-                  onChange={(e) => handleMaterialChange(material.id, e)}
-                  className={`block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.specifications?.[index]?.uom ? 'border-red-500' : ''}`}
-                  
+                  {...register(`specifications.${index}.uom`)}
+                  className={`block w-full px-3 py-2 border rounded-lg bg-white text-sm ${
+                    errors.specifications?.[index]?.uom
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
                 >
-                  <option value="">Select</option>
-                  {uomOptions.map((uom, i) => (
-                    <option key={i} value={uom}>
+                  <option value="" disabled selected hidden>
+                    Select
+                  </option>
+                  {uomOptions.map((uom) => (
+                    <option key={uom} value={uom}>
                       {uom}
                     </option>
                   ))}
                 </select>
-                {errors.specifications?.[index]?.uom && <p className="text-red-600 text-sm">{errors.specifications[index].uom.message}</p>}
+                {renderError(errors.specifications?.[index]?.uom)}
               </div>
-
-              {/* Description */}
-              <div className="space-y-1 md:col-span-2">
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700">
                   Description
                 </label>
                 <input
                   type="text"
-                  name="description"
-                  value={material.description}
-                  onChange={(e) => handleMaterialChange(material.id, e)}
+                  {...register(`specifications.${index}.description`)}
                   placeholder="Description"
-                  className={`block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.specifications?.[index]?.description ? 'border-red-500' : ''}`}
+                  className={`block w-full px-3 py-2 border rounded-lg text-sm ${
+                    errors.specifications?.[index]?.description
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
                 />
-                {errors.specifications?.[index]?.description && <p className="text-red-600 text-sm">{errors.specifications[index].description.message}</p>}
+                {renderError(errors.specifications?.[index]?.description)}
               </div>
-
-              {/* Alter Unit */}
-              <div className="space-y-1">
+              <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Alter Unit
                 </label>
                 <select
-                  name="alterUnit"
-                  value={material.alterUnit}
-                  onChange={(e) => handleMaterialChange(material.id, e)}
-                  className={`block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.specifications?.[index]?.alterUnit ? 'border-red-500' : ''}`}
+                  {...register(`specifications.${index}.alterUnit`)}
+                  className={`block w-full px-3 py-2 border rounded-lg bg-white text-sm ${
+                    errors.specifications?.[index]?.alterUnit
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
                 >
-                  <option value="">Select</option>
-                  {alterUnitOptions.map((unit, i) => (
-                    <option key={i} value={unit}>
+                  <option value="" disabled selected hidden>
+                    Select
+                  </option>
+                  {uomOptions.map((unit) => (
+                    <option key={unit} value={unit}>
                       {unit}
                     </option>
                   ))}
                 </select>
-                {errors.specifications?.[index]?.alterUnit && <p className="text-red-600 text-sm">{errors.specifications[index].alterUnit.message}</p>}
+                {renderError(errors.specifications?.[index]?.alterUnit)}
               </div>
-
-              {/* Alter Unit Value */}
-              <div className="space-y-1">
+              <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Alter Unit Value
                 </label>
-                <input
-                  type="text"
-                  name="alterUnitValue"
-                  value={material.alterUnitValue}
-                  onChange={(e) => handleMaterialChange(material.id, e)}
-                  placeholder="Value"
-                  className={`block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.specifications?.[index]?.alterUnitValue ? 'border-red-500' : ''}`}
-                />
-                {errors.specifications?.[index]?.alterUnitValue && <p className="text-red-600 text-sm">{errors.specifications[index].alterUnitValue.message}</p>}
+<input
+  type="number"
+  {...register(`specifications.${index}.alterUnitValue`, {
+    valueAsNumber: true // Convert to number
+  })}
+  placeholder="Value"
+  className={`block w-full px-3 py-2 border rounded-lg text-sm ${
+    errors.specifications?.[index]?.alterUnitValue
+      ? "border-red-500"
+      : "border-gray-300"
+  }`}
+/>
+                {renderError(errors.specifications?.[index]?.alterUnitValue)}
               </div>
-
-              {/* Serial/Unique No */}
-              <div className="space-y-1">
+              <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Serial/Unique No
                 </label>
                 <div className="flex">
                   <input
                     type="text"
-                    name="serialUniqueNo"
-                    value={material.serialUniqueNo}
-                    onChange={(e) => handleMaterialChange(material.id, e)}
+                    {...register(`specifications.${index}.serialUniqueNo`)}
                     placeholder="Serial No"
-                    className={`block w-full px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.specifications?.[index]?.serialUniqueNo ? 'border-red-500' : ''}`}
+                    className={`block w-full px-3 py-2 border rounded-l-lg text-sm ${
+                      errors.specifications?.[index]?.serialUniqueNo
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                   />
-                  {materials.length > 1 && (
+                  {fields.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => removeMaterial(material.id)}
+                      onClick={() => removeMaterial(index)}
                       className="px-3 py-2 bg-red-500 text-white rounded-r-lg hover:bg-red-600 focus:outline-none"
                     >
                       <FaTrash className="text-sm" />
                     </button>
                   )}
                 </div>
-                {errors.specifications?.[index]?.serialUniqueNo && <p className="text-red-600 text-sm">{errors.specifications[index].serialUniqueNo.message}</p>}
+                {renderError(errors.specifications?.[index]?.serialUniqueNo)}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Form Footer */}
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-          <button
-            type="submit"
-            className="btn-primary"
-          >
+          <LoadingButton type="submit" isLoading={isPending}>
             Save Product Entry
-          </button>
+          </LoadingButton>
         </div>
       </form>
     </div>

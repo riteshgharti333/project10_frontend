@@ -1,24 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaBoxes, FaTag, FaImage } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useNavigate } from "react-router-dom";
 import BackButton from "../../components/BackButton/BackButton";
 import { toast } from "sonner";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
-
-const productSchema = z.object({
-  productName: z.string().min(1, "Product name is required"),
-  productCode: z.string().min(1, "Product code is required"),
-  parentCategory: z.string().min(1, "Parent category is required"),
-  subCategory: z.string().min(1, "Sub category is required"),
-  categoryLogo: z.instanceof(File).optional(),
-  description: z.string().optional(),
-  unit: z.string().min(1, "Unit is required"),
-  price: z.coerce.number().min(0, "Price must be positive"),
-  taxRate: z.coerce.number().min(0, "Tax rate must be positive"),
-  status: z.enum(["Active", "Inactive"]).default("Active"),
-});
+import { useCreateProduct } from "../../feature/itemHooks/useProduct";
+import { productSchema } from "@hospital/schemas";
 
 const parentCategories = [
   "Medical Equipment",
@@ -31,11 +21,11 @@ const parentCategories = [
 
 const subCategories = {
   "Medical Equipment": ["Patient Monitoring", "Therapeutic", "Laboratory"],
-  "Pharmaceuticals": ["Drugs", "Vaccines", "Injectables"],
-  "Disposables": ["Gloves", "Masks", "Syringes"],
-  "Diagnostic": ["Imaging", "Test Kits", "Pathology"],
-  "Surgical": ["Instruments", "Sutures", "Implants"],
-  "Furniture": ["Hospital Beds", "Chairs", "Cabinets"],
+  Pharmaceuticals: ["Drugs", "Vaccines", "Injectables"],
+  Disposables: ["Gloves", "Masks", "Syringes"],
+  Diagnostic: ["Imaging", "Test Kits", "Pathology"],
+  Surgical: ["Instruments", "Sutures", "Implants"],
+  Furniture: ["Hospital Beds", "Chairs", "Cabinets"],
 };
 
 const formFields = [
@@ -48,12 +38,14 @@ const formFields = [
         type: "text",
         name: "productName",
         placeholder: "Enter product name",
+        required: true,
       },
       {
         label: "Product Code",
         type: "text",
         name: "productCode",
         placeholder: "Enter product code",
+        required: true,
       },
       {
         label: "Parent Category",
@@ -61,23 +53,25 @@ const formFields = [
         name: "parentCategory",
         placeholder: "Select parent category",
         options: parentCategories,
+        required: true,
       },
       {
         label: "Sub Category",
         type: "select",
         name: "subCategory",
         placeholder: "Select sub category",
-        dynamicOptions: (watch) => 
+        dynamicOptions: (watch) =>
           watch("parentCategory") ? subCategories[watch("parentCategory")] : [],
+        required: true,
       },
     ],
   },
   {
-    section: "Category Details",
+    section: "Product Details",
     icon: <FaBoxes className="text-blue-500" />,
     fields: [
       {
-        label: "Category Logo",
+        label: "Product Image",
         type: "file",
         name: "categoryLogo",
         accept: "image/*",
@@ -99,18 +93,21 @@ const formFields = [
         type: "text",
         name: "unit",
         placeholder: "e.g., pieces, boxes",
+        required: true,
       },
       {
         label: "Price",
         type: "number",
         name: "price",
         placeholder: "Enter product price",
+        required: true,
       },
       {
         label: "Tax Rate (%)",
         type: "number",
         name: "taxRate",
         placeholder: "Enter tax rate",
+        required: true,
       },
       {
         label: "Status",
@@ -118,16 +115,20 @@ const formFields = [
         name: "status",
         placeholder: "Select product status",
         options: ["Active", "Inactive"],
+        required: true,
       },
     ],
   },
 ];
 
 const NewProduct = () => {
+  const navigate = useNavigate();
+  const { mutateAsync, isPending } = useCreateProduct();
+  const [previewImage, setPreviewImage] = useState("");
+
   const {
     register,
     handleSubmit,
-    reset,
     watch,
     setValue,
     formState: { errors },
@@ -138,49 +139,73 @@ const NewProduct = () => {
       productCode: "",
       parentCategory: "",
       subCategory: "",
+      categoryLogo: undefined,
       description: "",
       unit: "",
-      price: 0,
-      taxRate: 0,
+      price: "",
+      taxRate: "",
       status: "Active",
     },
   });
 
-  const [isPending, setIsPending] = React.useState(false);
-  const [previewImage, setPreviewImage] = React.useState("");
-
   const parentCategory = watch("parentCategory");
+  const categoryLogoFile = watch("categoryLogo");
 
-  const onSubmit = async (data) => {
-    try {
-      setIsPending(true);
-      // Replace with your actual API call
-      // const response = await createProduct(data);
-      // Simulating API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      toast.success("Product created successfully");
-      reset();
-      setPreviewImage("");
-    } catch (error) {
-      console.error(error);
-      toast.error(error?.response?.data?.message || "Failed to create product");
-    } finally {
-      setIsPending(false);
-    }
-  };
+  useEffect(() => {
+    setValue("subCategory", "");
+  }, [parentCategory, setValue]);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setValue("categoryLogo", file);
+  useEffect(() => {
+    if (categoryLogoFile && categoryLogoFile.length > 0) {
+      const file = categoryLogoFile[0];
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
+    } else {
+      setPreviewImage("");
+    }
+  }, [categoryLogoFile]);
+
+  const [fileName, setFileName] = useState("");
+
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFileName(file.name); // Just store the filename
+      setValue("categoryLogo", file.name); // Store filename in form data
+      
+      // For preview (optional)
+      const reader = new FileReader();
+      reader.onload = () => setPreviewImage(reader.result);
+      reader.readAsDataURL(file);
+    } else {
+      setFileName("");
+      setValue("categoryLogo", "");
+      setPreviewImage("");
     }
   };
+
+
+const onSubmit = async (data) => {
+  console.log("Submitting:", data); // Will show filename string
+  
+  try {
+    const response = await mutateAsync({
+      ...data,
+      categoryLogo: fileName || "" // Send the filename string
+    });
+
+    if (response?.data?.success) {
+      toast.success("Product created successfully!");
+      navigate(`/product/${response.data.data.id}`);
+    }
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Failed to create product");
+  }
+};
 
   return (
     <div className="mx-auto">
@@ -202,6 +227,7 @@ const NewProduct = () => {
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+        noValidate
       >
         {formFields.map((section, sectionIndex) => (
           <div
@@ -233,93 +259,83 @@ const NewProduct = () => {
                         : ""
                     }`}
                   >
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor={field.name}
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       {field.label}
-                      {field.name !== "description" && field.name !== "categoryLogo" && (
+                      {field.required && (
                         <span className="text-red-500 ml-1">*</span>
                       )}
                     </label>
 
                     {field.type === "select" ? (
-                      <div className="relative">
-                        <select
-                          {...register(field.name)}
-                          className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8 ${
-                            error ? "border-red-500" : "border-gray-300"
-                          } ${
-                            field.dynamicOptions && !parentCategory
-                              ? "bg-gray-100"
-                              : ""
-                          }`}
-                          aria-invalid={error ? "true" : "false"}
-                          disabled={field.dynamicOptions && !parentCategory}
-                        >
-                          <option value="">{field.placeholder}</option>
-                          {options.map((option, i) => (
-                            <option key={i} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <svg
-                            className="h-5 w-5 text-gray-400"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                      </div>
+                      <select
+                        id={field.name}
+                        {...register(field.name)}
+                        className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white ${
+                          error ? "border-red-500" : "border-gray-300"
+                        } ${
+                          field.dynamicOptions && !parentCategory
+                            ? "bg-gray-100 cursor-not-allowed"
+                            : ""
+                        }`}
+                        disabled={field.dynamicOptions && !parentCategory}
+                      >
+                        <option value="" disabled selected hidden>{field.placeholder}</option>
+                        {options.map((option, i) => (
+                          <option key={i} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
                     ) : field.type === "textarea" ? (
                       <textarea
+                        id={field.name}
                         {...register(field.name)}
                         rows={3}
                         placeholder={field.placeholder}
                         className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
                           error ? "border-red-500" : "border-gray-300"
                         }`}
-                        aria-invalid={error ? "true" : "false"}
                       />
                     ) : field.type === "file" ? (
                       <div className="space-y-4">
-                        <div className="flex items-center">
-                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                              <FaImage className="w-8 h-8 mb-3 text-gray-400" />
-                              <p className="mb-2 text-sm text-gray-500">
-                                <span className="font-semibold">
-                                  Click to upload
-                                </span>{" "}
-                                or drag and drop
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                SVG, PNG, JPG (MAX. 800x400px)
-                              </p>
-                            </div>
-                            <input
-                              type="file"
-                              {...register(field.name)}
-                              onChange={handleFileChange}
-                              accept={field.accept}
-                              className="hidden"
-                            />
-                          </label>
-                        </div>
-                        {previewImage && (
+                        <label
+                          htmlFor={field.name}
+                          className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 ${
+                            error ? "border-red-500" : "border-gray-300"
+                          }`}
+                        >
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <FaImage className="w-8 h-8 mb-3 text-gray-400" />
+                            <p className="mb-2 text-sm text-gray-500">
+                              <span className="font-semibold">
+                                Click to upload
+                              </span>{" "}
+                              or drag and drop
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              PNG, JPG, SVG (MAX. 5MB)
+                            </p>
+                          </div>
+                        <input
+    id="categoryLogo"
+    type="file"
+    accept="image/*"
+    onChange={handleFileChange}
+    className="hidden"
+  />
+                        </label>
+                        {previewImage && !error && (
                           <div className="mt-2">
                             <p className="text-sm font-medium text-gray-700 mb-1">
-                              Logo Preview:
+                              Image Preview:
                             </p>
-                            <div className="w-32 h-32 border border-gray-200 rounded-lg overflow-hidden">
+                            <div className="w-32 h-32 border border-gray-200 rounded-lg overflow-hidden p-1">
                               <img
                                 src={previewImage}
-                                alt="Category logo preview"
+                                alt="Product preview"
                                 className="w-full h-full object-contain"
                               />
                             </div>
@@ -328,18 +344,19 @@ const NewProduct = () => {
                       </div>
                     ) : (
                       <input
+                        id={field.name}
                         type={field.type}
-                        {...register(field.name)}
+                        {...register(field.name, {
+                          valueAsNumber: field.type === "number",
+                        })}
                         placeholder={field.placeholder}
                         className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
                           error ? "border-red-500" : "border-gray-300"
                         }`}
-                        aria-invalid={error ? "true" : "false"}
                       />
                     )}
-
                     {error && (
-                      <p className="text-red-600 text-sm mt-1" role="alert">
+                      <p className="text-red-600 text-sm mt-1">
                         {error.message}
                       </p>
                     )}
@@ -352,7 +369,7 @@ const NewProduct = () => {
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
           <LoadingButton isLoading={isPending} type="submit">
-            {isPending ? "Creating..." : "Create Product"}
+            Create Product
           </LoadingButton>
         </div>
       </form>

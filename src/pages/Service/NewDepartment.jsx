@@ -8,18 +8,8 @@ import { useCreateDepartment } from "../../feature/hooks/useDepartments";
 import { toast } from "sonner";
 
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
-
-const schema = z.object({
-  name: z.string().min(1, "Department Name is required"),
-  head: z.string().min(1, "Department Head is required"),
-  contactNumber: z
-    .string()
-    .min(10, "Contact Number must be at least 10 digits"),
-  email: z.string().email("Invalid email address"),
-  location: z.string().min(1, "Location is required"),
-  description: z.string().min(1, "Description is required"),
-  status: z.enum(["Active", "Inactive"]),
-});
+import { useNavigate } from "react-router-dom";
+import { departmentSchema } from "@hospital/schemas";
 
 const formFields = [
   {
@@ -82,13 +72,14 @@ const formFields = [
 ];
 
 const NewDepartment = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(departmentSchema),
     defaultValues: {
       name: "",
       head: "",
@@ -103,18 +94,12 @@ const NewDepartment = () => {
   const { mutateAsync, isPending } = useCreateDepartment();
 
   const onSubmit = async (data) => {
-    try {
-      const response = await mutateAsync(data);
-      const { success, message, data: createdDept } = response;
+    const response = await mutateAsync(data);
+    const { success, message, data: createdDept } = response;
 
-      if (success) {
-        toast.success(message);
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error(
-        error?.response?.data?.message || "Failed to create department"
-      );
+    if (response?.data?.success) {
+      toast.success(response?.data?.message);
+      navigate(`/department/${response.data.data.id}`);
     }
   };
 
@@ -177,7 +162,9 @@ const NewDepartment = () => {
                           }`}
                           aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
+                          <option value="" disabled selected hidden>
+                            {field.placeholder}
+                          </option>
                           {field.options.map((option, i) => (
                             <option key={i} value={option}>
                               {option}

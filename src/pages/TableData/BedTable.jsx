@@ -8,7 +8,7 @@ import Loader from "../../components/Loader/Loader";
 
 const BedTable = () => {
 
-   const { data, error, isLoading, isError } = useGetBeds();
+   const { data, isLoading } = useGetBeds();
   
 
   const columns = useMemo(

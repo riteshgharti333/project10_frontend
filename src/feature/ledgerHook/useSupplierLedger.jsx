@@ -8,6 +8,8 @@ import {
   updateSupplierLedgerEntryAPI,
   deleteSupplierLedgerEntryAPI,
 } from "../ledgerApi/supplierLedgerApi";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../utils/errorUtils";
 
 export const useGetSupplierLedgerEntries = () => {
   return useQuery({
@@ -16,6 +18,8 @@ export const useGetSupplierLedgerEntries = () => {
       const { data } = await getAllSupplierLedgerEntriesAPI();
       return data.data;
     },
+    select: (data) => data || [],
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -27,6 +31,7 @@ export const useGetSupplierLedgerEntryById = (id) => {
       return data.data;
     },
     enabled: !!id,
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -37,6 +42,8 @@ export const useGetSupplierOutstandingBalance = () => {
       const { data } = await getSupplierOutstandingBalanceAPI();
       return data.data;
     },
+    select: (data) => data || {},
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -47,6 +54,8 @@ export const useGetSupplierSummaryReport = () => {
       const { data } = await getSupplierSummaryReportAPI();
       return data.data;
     },
+    select: (data) => data || {},
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -54,9 +63,11 @@ export const useCreateSupplierLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createSupplierLedgerEntryAPI,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.data?.message || "Entry created successfully");
       queryClient.invalidateQueries({ queryKey: ["supplierLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -64,9 +75,11 @@ export const useUpdateSupplierLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => updateSupplierLedgerEntryAPI(id, data),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.data?.message || "Entry updated successfully");
       queryClient.invalidateQueries({ queryKey: ["supplierLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -74,8 +87,10 @@ export const useDeleteSupplierLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteSupplierLedgerEntryAPI,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.data?.message || "Entry deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["supplierLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };

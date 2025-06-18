@@ -1,35 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   FaCalendarAlt,
   FaUser,
   FaUserMd,
   FaFileAlt,
-  FaVenusMars,
   FaMoneyBillAlt,
+  FaEdit,
+  FaTrash,
+  FaSave,
 } from "react-icons/fa";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
 import BackButton from "../../components/BackButton/BackButton";
+import Loader from "../../components/Loader/Loader";
+import NoData from "../../components/NoData/NoData";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import {
+  EditButton,
+  DeleteButton,
+  CancelButton,
+  SaveButton,
+} from "../../components/ActionButtons/ActionButtons";
+
+import {
+  useGetXrayReportById,
+  useUpdateXrayReport,
+  useDeleteXrayReport,
+} from "../../feature/hooks/useXray";
+import { xrayReportSchema } from "@hospital/schemas";
 
 const EditXray = () => {
-  const today = new Date().toISOString().split("T")[0];
-
-  const [formData, setFormData] = useState({
-    billDate: today,
-    patientMobile: "",
-    patientName: "",
-    patientAddress: "",
-    referredDoctor: "",
-    testDate: "",
-    reportDate: "",
-    age: "",
-    patientSex: "Male",
-    examDescription: "",
-    department: "",
-    billAmount: "",
-    discount: "0",
-    netBillAmount: "",
-    doctorEarning: "",
-    commissionPercent: "",
-  });
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [editMode, setEditMode] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const departments = [
     "Radiology",
@@ -39,293 +46,363 @@ const EditXray = () => {
     "General",
   ];
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const { data: xrayData, isLoading } = useGetXrayReportById(id);
+  const { mutateAsync: updateXrayReport, isPending: isUpdating } =
+    useUpdateXrayReport();
+  const { mutateAsync: deleteXrayReport, isPending: isDeleting } =
+    useDeleteXrayReport();
 
-    // Calculate net bill amount when bill amount or discount changes
-    if (name === "billAmount" || name === "discount") {
-      const bill = parseFloat(formData.billAmount) || 0;
-      const discount = parseFloat(formData.discount) || 0;
-      const netAmount = bill - (bill * discount) / 100;
-      setFormData((prev) => ({
-        ...prev,
-        netBillAmount: netAmount.toFixed(2),
-        doctorEarning: (
-          (netAmount * (parseFloat(prev.commissionPercent) || 0)) /
-          100
-        ).toFixed(2),
-      }));
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(xrayReportSchema),
+  });
+
+  const [billAmount, discountPercent, commissionPercent] = watch([
+    "billAmount",
+    "discountPercent",
+    "commissionPercent",
+  ]);
+  const netBillAmount = watch("netBillAmount");
+
+  const getDisabledStyles = (isDisabled) =>
+    isDisabled ? "bg-gray-100 cursor-not-allowed opacity-90" : "bg-white";
+
+  // Set form values and format dates when data loads
+  useEffect(() => {
+    if (xrayData) {
+      const formattedData = {
+        ...xrayData,
+        billDate: xrayData.billDate?.split("T")[0] || "",
+        testDate: xrayData.testDate?.split("T")[0] || "",
+        reportDate: xrayData.reportDate?.split("T")[0] || "",
+      };
+      reset(formattedData);
     }
+  }, [xrayData, reset]);
 
-    // Calculate doctor earning when commission percent changes
-    if (name === "commissionPercent") {
-      const netAmount = parseFloat(formData.netBillAmount) || 0;
-      setFormData((prev) => ({
-        ...prev,
-        doctorEarning: ((netAmount * parseFloat(value)) / 100).toFixed(2),
-      }));
+  // Calculate Net Bill Amount
+  useEffect(() => {
+    const bill = parseFloat(billAmount) || 0;
+    const disc = parseFloat(discountPercent) || 0;
+    const netAmount = bill - (bill * disc) / 100;
+    setValue("netBillAmount", parseFloat(netAmount.toFixed(2)));
+  }, [billAmount, discountPercent, setValue]);
+
+  // Calculate Doctor Earning
+  useEffect(() => {
+    const netAmount = parseFloat(netBillAmount) || 0;
+    const commission = parseFloat(commissionPercent) || 0;
+    const earning = (netAmount * commission) / 100;
+    setValue("doctorEarning", parseFloat(earning.toFixed(2)));
+  }, [netBillAmount, commissionPercent, setValue]);
+
+  const onSubmit = async (formData) => {
+    try {
+      const response = await updateXrayReport({ id, data: formData });
+      if (response?.data?.success) {
+        toast.success(response.data.message);
+        setEditMode(false);
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to update X-ray report"
+      );
     }
   };
 
-  const handleSexChange = (sex) => {
-    setFormData((prev) => ({
-      ...prev,
-      patientSex: sex,
-    }));
+  const handleCancel = () => {
+    // Re-format and reset
+    const formattedData = {
+      ...xrayData,
+      billDate: xrayData.billDate?.split("T")[0] || "",
+      testDate: xrayData.testDate?.split("T")[0] || "",
+      reportDate: xrayData.reportDate?.split("T")[0] || "",
+    };
+    reset(formattedData);
+    setEditMode(false);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Add form submission logic here
+  const handleDelete = async () => {
+    try {
+      const { data } = await deleteXrayReport(id);
+      if (data && data.message) {
+        toast.success(data.message);
+        navigate("/xray/xray-commision-report"); // Navigate to the list page
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to delete X-ray report"
+      );
+    } finally {
+      setShowDeleteModal(false);
+    }
   };
+
+  const renderError = (field) =>
+    errors[field] && (
+      <p className="text-red-600 text-sm mt-1">{errors[field].message}</p>
+    );
+
+  if (isLoading) return <Loader />;
+  if (!xrayData) return <NoData />;
 
   return (
     <div className="mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center">
-          <BackButton />
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        loading={isDeleting}
+      />
+
+      <div className="mb-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <BackButton />
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center ml-2">
               <FaFileAlt className="mr-2 text-blue-500" />
-              New X-ray Report
+              {editMode ? "Edit X-ray Report" : "View X-ray Report"}
             </h2>
-            <p className="text-gray-600 mt-1">
-              Please enter all required details for the X-ray report
-            </p>
           </div>
         </div>
       </div>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+        noValidate
       >
+        {/* --- Patient Information Section --- */}
         <div className="p-6">
           <div className="flex items-center mb-6">
-            <FaFileAlt className="text-blue-500" />
+            <FaUser className="text-blue-500" />
             <h3 className="ml-2 text-lg font-semibold text-gray-800">
               Patient Information
             </h3>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Bill Date
-                <span className="text-red-500 ml-1">*</span>
+                Bill Date<span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <input
                   type="date"
-                  name="billDate"
-                  value={formData.billDate}
-                  onChange={handleChange}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                  required
+                  {...register("billDate")}
+                  disabled={!editMode}
+                  className={`block w-full px-4 py-2 border rounded-lg pl-10 ${
+                    errors.billDate ? "border-red-500" : "border-gray-300"
+                  } ${getDisabledStyles(!editMode)}`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaCalendarAlt className="text-gray-400" />
                 </div>
               </div>
+              {renderError("billDate")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Patient Mobile
-                <span className="text-red-500 ml-1">*</span>
+                Patient Mobile<span className="text-red-500 ml-1">*</span>
               </label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  name="patientMobile"
-                  value={formData.patientMobile}
-                  onChange={handleChange}
-                  placeholder="Enter patient mobile number"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                  required
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaUser className="text-gray-400" />
-                </div>
-              </div>
+              <input
+                type="tel"
+                {...register("patientMobile")}
+                disabled={!editMode}
+                placeholder="Enter 10-digit mobile"
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.patientMobile ? "border-red-500" : "border-gray-300"
+                } ${getDisabledStyles(!editMode)}`}
+              />
+              {renderError("patientMobile")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Patient Name
-                <span className="text-red-500 ml-1">*</span>
+                Patient Name<span className="text-red-500 ml-1">*</span>
               </label>
               <input
                 type="text"
-                name="patientName"
-                value={formData.patientName}
-                onChange={handleChange}
+                {...register("patientName")}
+                disabled={!editMode}
                 placeholder="Enter patient name"
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                required
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.patientName ? "border-red-500" : "border-gray-300"
+                } ${getDisabledStyles(!editMode)}`}
               />
+              {renderError("patientName")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Patient Sex
-                <span className="text-red-500 ml-1">*</span>
+                Age<span className="text-red-500 ml-1">*</span>
               </label>
-              <div className="flex space-x-4">
+              <input
+                type="number"
+                {...register("age", { valueAsNumber: true })}
+                disabled={!editMode}
+                placeholder="e.g., 35"
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.age ? "border-red-500" : "border-gray-300"
+                } ${getDisabledStyles(!editMode)}`}
+              />
+              {renderError("age")}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Patient Sex<span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="flex space-x-4 pt-2">
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="patientSex"
-                    checked={formData.patientSex === "Male"}
-                    onChange={() => handleSexChange("Male")}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    {...register("patientSex")}
+                    value="Male"
+                    disabled={!editMode}
+                    className="h-4 w-4 text-blue-600"
                   />
                   <span className="ml-2">Male</span>
                 </label>
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="patientSex"
-                    checked={formData.patientSex === "Female"}
-                    onChange={() => handleSexChange("Female")}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    {...register("patientSex")}
+                    value="Female"
+                    disabled={!editMode}
+                    className="h-4 w-4 text-blue-600"
                   />
                   <span className="ml-2">Female</span>
                 </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    {...register("patientSex")}
+                    value="Other"
+                    disabled={!editMode}
+                    className="h-4 w-4 text-blue-600"
+                  />
+                  <span className="ml-2">Other</span>
+                </label>
               </div>
+              {renderError("patientSex")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Age
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <input
-                type="number"
-                name="age"
-                value={formData.age}
-                onChange={handleChange}
-                placeholder="Enter patient age"
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Referred Doctor
+                Referred Doctor<span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <input
                   type="text"
-                  name="referredDoctor"
-                  value={formData.referredDoctor}
-                  onChange={handleChange}
+                  {...register("referredDoctor")}
+                  disabled={!editMode}
                   placeholder="Enter doctor name"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
+                  className={`block w-full px-4 py-2 border rounded-lg pl-10 ${
+                    errors.referredDoctor ? "border-red-500" : "border-gray-300"
+                  } ${getDisabledStyles(!editMode)}`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaUserMd className="text-gray-400" />
                 </div>
               </div>
+              {renderError("referredDoctor")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Test Date
-                <span className="text-red-500 ml-1">*</span>
+                Test Date<span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <input
                   type="date"
-                  name="testDate"
-                  value={formData.testDate}
-                  onChange={handleChange}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                  required
+                  {...register("testDate")}
+                  disabled={!editMode}
+                  className={`block w-full px-4 py-2 border rounded-lg pl-10 ${
+                    errors.testDate ? "border-red-500" : "border-gray-300"
+                  } ${getDisabledStyles(!editMode)}`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaCalendarAlt className="text-gray-400" />
                 </div>
               </div>
+              {renderError("testDate")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Report Date
               </label>
               <div className="relative">
                 <input
                   type="date"
-                  name="reportDate"
-                  value={formData.reportDate}
-                  onChange={handleChange}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
+                  {...register("reportDate")}
+                  disabled={!editMode}
+                  className={`block w-full px-4 py-2 border rounded-lg pl-10 ${
+                    errors.reportDate ? "border-red-500" : "border-gray-300"
+                  } ${getDisabledStyles(!editMode)}`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaCalendarAlt className="text-gray-400" />
                 </div>
               </div>
+              {renderError("reportDate")}
             </div>
-
-            <div className="space-y-1 md:col-span-2">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Patient Address
-              </label>
-              <textarea
-                name="patientAddress"
-                value={formData.patientAddress}
-                onChange={handleChange}
-                placeholder="Enter patient address"
-                rows="2"
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div className="space-y-1 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Exam / Description
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <textarea
-                name="examDescription"
-                value={formData.examDescription}
-                onChange={handleChange}
-                placeholder="Enter exam description"
-                rows="3"
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Department
-                <span className="text-red-500 ml-1">*</span>
+                Department<span className="text-red-500 ml-1">*</span>
               </label>
               <select
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500  bg-white pr-8"
-                required
+                {...register("department")}
+                disabled={!editMode}
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.department ? "border-red-500" : "border-gray-300"
+                } ${getDisabledStyles(!editMode)}`}
               >
-                <option value="">Select Department</option>
+                <option value="" disabled hidden>
+                  Select Department
+                </option>
                 {departments.map((dept, index) => (
                   <option key={index} value={dept}>
                     {dept}
                   </option>
                 ))}
               </select>
+              {renderError("department")}
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Patient Address
+              </label>
+              <textarea
+                {...register("patientAddress")}
+                disabled={!editMode}
+                placeholder="Enter patient address"
+                rows="2"
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.patientAddress ? "border-red-500" : "border-gray-300"
+                } ${getDisabledStyles(!editMode)}`}
+              />
+              {renderError("patientAddress")}
+            </div>
+            <div className="lg:col-span-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Exam / Description<span className="text-red-500 ml-1">*</span>
+              </label>
+              <textarea
+                {...register("examDescription")}
+                disabled={!editMode}
+                placeholder="e.g., Chest X-ray PA view"
+                rows="2"
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.examDescription ? "border-red-500" : "border-gray-300"
+                } ${getDisabledStyles(!editMode)}`}
+              />
+              {renderError("examDescription")}
             </div>
           </div>
         </div>
 
+        {/* --- Billing Information Section --- */}
         <div className="p-6 border-t border-gray-100">
           <div className="flex items-center mb-6">
             <FaMoneyBillAlt className="text-blue-500" />
@@ -333,97 +410,98 @@ const EditXray = () => {
               Billing Information
             </h3>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Bill Amount
-                <span className="text-red-500 ml-1">*</span>
+                Bill Amount<span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  name="billAmount"
-                  value={formData.billAmount}
-                  onChange={handleChange}
+                  {...register("billAmount", { valueAsNumber: true })}
+                  disabled={!editMode}
                   placeholder="0.00"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
                   step="0.01"
-                  required
+                  className={`block w-full px-4 py-2 border rounded-lg pl-8 ${
+                    errors.billAmount ? "border-red-500" : "border-gray-300"
+                  } ${getDisabledStyles(!editMode)}`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <span className="text-gray-500">₹</span>
                 </div>
               </div>
+              {renderError("billAmount")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Discount (%)
+                Discount %
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  name="discount"
-                  value={formData.discount}
-                  onChange={handleChange}
+                  {...register("discountPercent", { valueAsNumber: true })}
+                  disabled={!editMode}
                   placeholder="0"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-10"
+                  className={`block w-full px-4 py-2 border rounded-lg pr-8 ${
+                    errors.discountPercent
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  } ${getDisabledStyles(!editMode)}`}
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <span className="text-gray-500">%</span>
                 </div>
               </div>
+              {renderError("discountPercent")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Net Bill Amount
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  name="netBillAmount"
-                  value={formData.netBillAmount}
+                  {...register("netBillAmount", { valueAsNumber: true })}
                   readOnly
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 pl-10"
+                  className="block w-full px-4 py-2 border rounded-lg bg-gray-100 pl-8"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <span className="text-gray-500">₹</span>
                 </div>
               </div>
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Commission %
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  name="commissionPercent"
-                  value={formData.commissionPercent}
-                  onChange={handleChange}
+                  {...register("commissionPercent", { valueAsNumber: true })}
+                  disabled={!editMode}
                   placeholder="0"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-10"
+                  className={`block w-full px-4 py-2 border rounded-lg pr-8 ${
+                    errors.commissionPercent
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  } ${getDisabledStyles(!editMode)}`}
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <span className="text-gray-500">%</span>
                 </div>
               </div>
+              {renderError("commissionPercent")}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Doctor Earning
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  name="doctorEarning"
-                  value={formData.doctorEarning}
+                  {...register("doctorEarning", { valueAsNumber: true })}
                   readOnly
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 pl-10"
+                  className="block w-full px-4 py-2 border rounded-lg bg-gray-100 pl-8"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <span className="text-gray-500">₹</span>
@@ -433,10 +511,22 @@ const EditXray = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-          <button type="submit" className="btn-primary">
-            Save X-ray Report
-          </button>
+        {/* --- Action Buttons --- */}
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+          {!editMode ? (
+            <>
+              <DeleteButton
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+              />
+              <EditButton onClick={() => setEditMode(true)} />
+            </>
+          ) : (
+            <>
+              <CancelButton onClick={handleCancel} />
+              <SaveButton type="submit" isLoading={isUpdating} />
+            </>
+          )}
         </div>
       </form>
     </div>

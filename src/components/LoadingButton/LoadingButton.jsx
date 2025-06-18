@@ -1,10 +1,9 @@
-
 const LoadingButton = ({ isLoading, children, className = "", ...props }) => {
   return (
     <button
       {...props}
       disabled={isLoading || props.disabled}
-      className={`inline-flex items-center cursor-pointer justify-center rounded-md bg-blue-600 px-4 py-2 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition ${className}`}
+      className={`btn-edit ${className}`}
     >
       {isLoading && (
         <svg

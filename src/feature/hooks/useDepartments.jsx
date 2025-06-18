@@ -6,72 +6,71 @@ import {
   updateDepartmentAPI,
   deleteDepartmentAPI,
 } from "../api/departmentApi";
-
 import { toast } from "sonner";
 import { getErrorMessage } from "../../utils/errorUtils";
 
-export const useGetDepartments = () =>
-  useQuery({
+// FETCH ALL DEPARTMENTS
+export const useGetDepartments = () => {
+  return useQuery({
     queryKey: ["departments"],
     queryFn: async () => {
       const { data } = await getAllDepartmentsAPI();
-      return data.data;
+      return data?.data || [];
     },
     retry: 1,
     onError: (error) => toast.error(getErrorMessage(error)),
   });
+};
 
-export const useGetDepartment = (id) =>
-  useQuery({
+// FETCH A SINGLE DEPARTMENT BY ID
+export const useGetDepartmentById = (id) => {
+  return useQuery({
     queryKey: ["departments", id],
     queryFn: async () => {
-      if (!id) throw new Error("Department ID is required");
       const { data } = await getDepartmentByIdAPI(id);
-      return data.data;
+      return data?.data;
     },
-    enabled: Boolean(id),
+    enabled: !!id,
     retry: 1,
     onError: (error) => toast.error(getErrorMessage(error)),
   });
+};
 
+// ✅ CREATE A NEW DEPARTMENT
 export const useCreateDepartment = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createDepartmentAPI,
-    onSuccess: ({ message }) => {
-      toast.success(message || "Department created successfully");
+    onSuccess: (response) => {
+      toast.success(response?.message || "Department created successfully");
       queryClient.invalidateQueries({ queryKey: ["departments"] });
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
+//  UPDATE AN EXISTING DEPARTMENT
 export const useUpdateDepartment = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => updateDepartmentAPI(id, data),
-    onSuccess: ({ message }) => {
-      toast.success(message || "Department updated successfully");
+    onSuccess: (response) => {
+      toast.success(response?.message || "Department updated successfully");
       queryClient.invalidateQueries({ queryKey: ["departments"] });
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
+//  DELETE A DEPARTMENT
 export const useDeleteDepartment = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteDepartmentAPI,
-    onSuccess: ({ message }) => {
-      toast.success(message || "Department deleted successfully");
+    onSuccess: (response) => {
+      toast.success(response?.message || "Department deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["departments"] });
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };

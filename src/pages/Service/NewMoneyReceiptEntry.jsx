@@ -1,120 +1,112 @@
 import React from "react";
-import { FaBuilding, FaUser, FaPhone } from "react-icons/fa";
+import { FaUser, FaPhone, FaMoneyBillWave, FaFileAlt, FaCheckCircle } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import BackButton from "../../components/BackButton/BackButton";
-import { useCreateDepartment } from "../../feature/hooks/useDepartments";
+import { moneyReceiptSchema } from "@hospital/schemas";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+import BackButton from "../../components/BackButton/BackButton";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
+import { useCreateMoneyReceipt } from "../../feature/transectionHooks/useMoneyReceipt";
 
-const schema = z.object({
-  name: z.string().min(1, "Department Name is required"),
-  head: z.string().min(1, "Department Head is required"),
-  contactNumber: z
-    .string()
-    .min(10, "Contact Number must be at least 10 digits"),
-  email: z.string().email("Invalid email address"),
-  location: z.string().min(1, "Location is required"),
-  description: z.string().min(1, "Description is required"),
-  status: z.enum(["Active", "Inactive"]),
-});
+const paymentModes = ["Cash", "Cheque", "Card", "Online Transfer", "Other"];
+const statuses = ["Active", "Cancelled", "Refunded"];
 
 const formFields = [
   {
-    section: "Department Information",
-    icon: <FaBuilding className="text-blue-500" />,
+    section: "Receipt Details",
+    icon: <FaMoneyBillWave className="text-blue-500" />,
     fields: [
       {
-        label: "Department Name",
-        type: "text",
-        name: "name",
-        placeholder: "Enter department name",
+        label: "Date",
+        type: "date",
+        name: "date",
       },
       {
-        label: "Department Head",
+        label: "Patient Name",
         type: "text",
-        name: "head",
-        placeholder: "Enter department head name",
+        name: "patientName",
+        placeholder: "Enter patient name",
         icon: <FaUser className="text-gray-400" />,
       },
       {
-        label: "Contact Number",
+        label: "Mobile Number",
         type: "tel",
-        name: "contactNumber",
-        placeholder: "Enter contact number",
+        name: "mobile",
+        placeholder: "Enter mobile number",
         icon: <FaPhone className="text-gray-400" />,
       },
       {
-        label: "Email",
-        type: "email",
-        name: "email",
-        placeholder: "Enter department email",
+        label: "Amount",
+        type: "number",
+        name: "amount",
+        placeholder: "Enter amount",
       },
     ],
   },
   {
-    section: "Additional Details",
-    icon: <FaBuilding className="text-blue-500" />,
+    section: "Payment Info",
+    icon: <FaFileAlt className="text-blue-500" />,
     fields: [
       {
-        label: "Location",
-        type: "text",
-        name: "location",
-        placeholder: "Enter department location",
+        label: "Payment Mode",
+        type: "select",
+        name: "paymentMode",
+        options: paymentModes,
+        placeholder: "Select payment mode",
       },
       {
-        label: "Description",
+        label: "Remarks",
         type: "textarea",
-        name: "description",
-        placeholder: "Enter department description",
+        name: "remarks",
+        placeholder: "Enter any remarks (optional)",
+      },
+      {
+        label: "Received By",
+        type: "text",
+        name: "receivedBy",
+        placeholder: "Enter staff name",
       },
       {
         label: "Status",
         type: "select",
         name: "status",
-        placeholder: "Select department status",
-        options: ["Active", "Inactive"],
+        options: statuses,
+        placeholder: "Select status",
       },
     ],
   },
 ];
 
-const NewDepartment = () => {
+const NewMoneyReceiptEntry = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(moneyReceiptSchema),
     defaultValues: {
-      name: "",
-      head: "",
-      contactNumber: "",
-      email: "",
-      location: "",
-      description: "",
+      date: new Date().toISOString().split("T")[0],
+      patientName: "",
+      mobile: "",
+      amount: 0,
+      paymentMode: "Cash",
+      remarks: "",
+      receivedBy: "",
       status: "Active",
     },
   });
 
-  const { mutateAsync, isPending } = useCreateDepartment();
+  const { mutateAsync, isPending } = useCreateMoneyReceipt();
 
-  const onSubmit = async (data) => {
-    try {
-      const response = await mutateAsync(data);
-      const { success, message, data: createdDept } = response;
-
-      if (success) {
-        toast.success(message);
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error(
-        error?.response?.data?.message || "Failed to create department"
-      );
+  const onSubmit = async (formData) => {
+    const response = await mutateAsync(formData);
+    if (response?.data?.success) {
+      navigate(`/money-receipt/${response.data.data.id}`);
     }
   };
 
@@ -125,12 +117,10 @@ const NewDepartment = () => {
           <BackButton />
           <div>
             <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-              <FaBuilding className="mr-2 text-blue-500" />
-              New Department
+              <FaMoneyBillWave className="mr-2 text-blue-500" />
+              New Money Receipt
             </h2>
-            <p className="text-gray-600 mt-1">
-              Please enter all required details for the new department
-            </p>
+            <p className="text-gray-600 mt-1">Fill all required details to generate a receipt</p>
           </div>
         </div>
       </div>
@@ -142,9 +132,7 @@ const NewDepartment = () => {
         {formFields.map((section, sectionIndex) => (
           <div
             key={sectionIndex}
-            className={`p-6 ${
-              sectionIndex !== 0 ? "border-t border-gray-100" : ""
-            }`}
+            className={`p-6 ${sectionIndex !== 0 ? "border-t border-gray-100" : ""}`}
           >
             <div className="flex items-center mb-6">
               {section.icon}
@@ -159,13 +147,11 @@ const NewDepartment = () => {
                 return (
                   <div
                     key={fieldIndex}
-                    className={`space-y-1 ${
-                      field.type === "textarea" ? "md:col-span-2" : ""
-                    }`}
+                    className={`space-y-1 ${field.type === "textarea" ? "md:col-span-2" : ""}`}
                   >
                     <label className="block text-sm font-medium text-gray-700">
                       {field.label}
-                      <span className="text-red-500 ml-1">*</span>
+                      {field.name !== "remarks" && <span className="text-red-500 ml-1">*</span>}
                     </label>
 
                     {field.type === "select" ? (
@@ -175,11 +161,12 @@ const NewDepartment = () => {
                           className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8 ${
                             error ? "border-red-500" : "border-gray-300"
                           }`}
-                          aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
-                          {field.options.map((option, i) => (
-                            <option key={i} value={option}>
+                          <option value="" disabled hidden>
+                            {field.placeholder}
+                          </option>
+                          {field.options.map((option, idx) => (
+                            <option key={idx} value={option}>
                               {option}
                             </option>
                           ))}
@@ -207,7 +194,6 @@ const NewDepartment = () => {
                         className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
                           error ? "border-red-500" : "border-gray-300"
                         }`}
-                        aria-invalid={error ? "true" : "false"}
                       />
                     ) : (
                       <div className="relative">
@@ -218,7 +204,6 @@ const NewDepartment = () => {
                           className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
                             field.icon ? "pl-10" : ""
                           } ${error ? "border-red-500" : "border-gray-300"}`}
-                          aria-invalid={error ? "true" : "false"}
                         />
                         {field.icon && (
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -242,7 +227,7 @@ const NewDepartment = () => {
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
           <LoadingButton isLoading={isPending} type="submit">
-            {isPending ? "Creating..." : "Create Department"}
+            {isPending ? "Creating..." : "Create Receipt"}
           </LoadingButton>
         </div>
       </form>
@@ -250,4 +235,4 @@ const NewDepartment = () => {
   );
 };
 
-export default NewDepartment;
+export default NewMoneyReceiptEntry;

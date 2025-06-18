@@ -7,6 +7,8 @@ import {
   updateDoctorLedgerEntryAPI,
   deleteDoctorLedgerEntryAPI,
 } from "../ledgerApi/doctorLedgerApi";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../utils/errorUtils";
 
 export const useGetDoctorLedgerEntries = () => {
   return useQuery({
@@ -15,6 +17,8 @@ export const useGetDoctorLedgerEntries = () => {
       const { data } = await getAllDoctorLedgerEntriesAPI();
       return data.data;
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
+    select: (data) => data || [],
   });
 };
 
@@ -26,6 +30,7 @@ export const useGetDoctorLedgerEntryById = (id) => {
       return data.data;
     },
     enabled: !!id,
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -36,6 +41,8 @@ export const useGetDoctorBalance = () => {
       const { data } = await getDoctorBalanceAPI();
       return data.data;
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
+    select: (data) => data ?? 0,
   });
 };
 
@@ -43,9 +50,11 @@ export const useCreateDoctorLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createDoctorLedgerEntryAPI,
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.data?.message || "Doctor ledger entry created successfully");
       queryClient.invalidateQueries({ queryKey: ["doctorLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -53,9 +62,11 @@ export const useUpdateDoctorLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => updateDoctorLedgerEntryAPI(id, data),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.data?.message || "Doctor ledger entry updated successfully");
       queryClient.invalidateQueries({ queryKey: ["doctorLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -63,8 +74,10 @@ export const useDeleteDoctorLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteDoctorLedgerEntryAPI,
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.data?.message || "Doctor ledger entry deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["doctorLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };

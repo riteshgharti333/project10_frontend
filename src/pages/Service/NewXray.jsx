@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaCalendarAlt,
   FaUser,
@@ -12,64 +13,13 @@ import { z } from "zod";
 import { toast } from "sonner";
 import BackButton from "../../components/BackButton/BackButton";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
-
-const xrayReportSchema = z.object({
-  billDate: z.string().min(1, "Bill date is required"),
-  patientMobile: z
-    .string()
-    .min(10, "A valid 10-digit mobile number is required"),
-  patientName: z.string().min(1, "Patient name is required"),
-  patientSex: z.enum(["Male", "Female", "Other"], {
-    errorMap: () => ({ message: "Please select a gender." }),
-  }),
-  age: z.coerce
-    .number()
-    .int()
-    .min(0, "Age cannot be negative")
-    .max(120, "Please enter a valid age"),
-  referredDoctor: z.string().min(1, "Referred doctor is required"),
-  testDate: z.string().min(1, "Test date is required"),
-  reportDate: z.string().optional(),
-  patientAddress: z.string().optional(),
-  examDescription: z.string().min(1, "Exam description is required"),
-  department: z.string().min(1, "Department must be selected"),
-  billAmount: z.coerce
-    .number()
-    .positive("Bill amount must be a positive number"),
-  discount: z.coerce
-    .number()
-    .min(0, "Discount cannot be negative")
-    .max(100, "Discount cannot exceed 100%")
-    .default(0),
-  netBillAmount: z.coerce.number(),
-  commissionPercent: z.coerce
-    .number()
-    .min(0, "Commission cannot be negative")
-    .max(100, "Commission cannot exceed 100%")
-    .default(0),
-  doctorEarning: z.coerce.number(),
-});
-
-const useCreateXrayReport = () => {
-  const [isPending, setIsPending] = React.useState(false);
-  const mutateAsync = (data) => {
-    setIsPending(true);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        setIsPending(false);
-        console.log("Submitting X-ray Report Data:", data);
-        resolve({
-          success: true,
-          message: "X-ray report created successfully!",
-          data: { id: `XRAY-${Date.now()}`, ...data },
-        });
-      }, 1500);
-    });
-  };
-  return { mutateAsync, isPending };
-};
+import { useCreateXrayReport } from "../../feature/hooks/useXray";
+import { xrayReportSchema } from "@hospital/schemas";
 
 const NewXray = () => {
+  const navigate = useNavigate();
+  const { mutateAsync, isPending } = useCreateXrayReport();
+
   const departments = [
     "Radiology",
     "Cardiology",
@@ -84,7 +34,6 @@ const NewXray = () => {
     handleSubmit,
     watch,
     setValue,
-    reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(xrayReportSchema),
@@ -95,52 +44,57 @@ const NewXray = () => {
       patientSex: "Male",
       age: "",
       referredDoctor: "",
-      testDate: "",
+      testDate: today,
       reportDate: "",
       patientAddress: "",
       examDescription: "",
       department: "",
       billAmount: "",
-      discount: 0,
+      discountPercent: 0,
       netBillAmount: 0,
       commissionPercent: 0,
       doctorEarning: 0,
     },
   });
 
-  const [billAmount, discount, commissionPercent, netBillAmount] = watch([
-    "billAmount",
-    "discount",
-    "commissionPercent",
-    "netBillAmount",
-  ]);
+  const [billAmount, discountPercent, commissionPercent, netBillAmount] = watch(
+    ["billAmount", "discountPercent", "commissionPercent", "netBillAmount"]
+  );
 
+  // Calculate Net Bill Amount
   useEffect(() => {
     const bill = parseFloat(billAmount) || 0;
-    const disc = parseFloat(discount) || 0;
+    const disc = parseFloat(discountPercent) || 0;
     const netAmount = bill - (bill * disc) / 100;
-    setValue("netBillAmount", netAmount.toFixed(2));
-  }, [billAmount, discount, setValue]);
+    setValue("netBillAmount", parseFloat(netAmount.toFixed(2)));
+  }, [billAmount, discountPercent, setValue]);
 
+  // Calculate Doctor Earning
   useEffect(() => {
     const netAmount = parseFloat(netBillAmount) || 0;
     const commission = parseFloat(commissionPercent) || 0;
     const earning = (netAmount * commission) / 100;
-    setValue("doctorEarning", earning.toFixed(2));
+    setValue("doctorEarning", parseFloat(earning.toFixed(2)));
   }, [netBillAmount, commissionPercent, setValue]);
 
-  const { mutateAsync, isPending } = useCreateXrayReport();
-
+  // --- REFACTORED onSubmit function ---
   const onSubmit = async (data) => {
-    try {
-      const response = await mutateAsync(data);
-      if (response.success) {
-        toast.success(response.message);
-        reset();
+    const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
+      // Trim strings and convert empty strings to undefined to be omitted
+      if (typeof value === "string") {
+        const trimmedValue = value.trim();
+        if (trimmedValue) acc[key] = trimmedValue;
+      } else if (value !== null && value !== undefined) {
+        acc[key] = value;
       }
-    } catch (error) {
-      console.error(error);
-      toast.error(error?.response?.data?.message || "Failed to save report");
+      return acc;
+    }, {});
+
+    const response = await mutateAsync(cleanedData);
+
+    if (response?.data?.success) {
+      const newReportId = response.data.data.id;
+      navigate(`/xray/${newReportId}`);
     }
   };
 
@@ -169,7 +123,9 @@ const NewXray = () => {
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+        noValidate
       >
+        {/* --- Patient Information Section --- */}
         <div className="p-6">
           <div className="flex items-center mb-6">
             <FaUser className="text-blue-500" />
@@ -177,8 +133,8 @@ const NewXray = () => {
               Patient Information
             </h3>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* ... other patient fields ... */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Bill Date<span className="text-red-500 ml-1">*</span>
@@ -231,7 +187,7 @@ const NewXray = () => {
               </label>
               <input
                 type="number"
-                {...register("age")}
+                {...register("age", { valueAsNumber: true })}
                 placeholder="e.g., 35"
                 className={`block w-full px-4 py-2 border rounded-lg ${
                   errors.age ? "border-red-500" : "border-gray-300"
@@ -339,7 +295,9 @@ const NewXray = () => {
                   errors.department ? "border-red-500" : "border-gray-300"
                 }`}
               >
-                <option value="">Select Department</option>
+                <option value="" disabled selected hidden>
+                  Select Department
+                </option>
                 {departments.map((dept, index) => (
                   <option key={index} value={dept}>
                     {dept}
@@ -347,6 +305,20 @@ const NewXray = () => {
                 ))}
               </select>
               {renderError("department")}
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Patient Address
+              </label>
+              <textarea
+                {...register("patientAddress")}
+                placeholder="Enter patient address"
+                rows="2"
+                className={`block w-full px-4 py-2 border rounded-lg ${
+                  errors.patientAddress ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {renderError("patientAddress")}
             </div>
             <div className="lg:col-span-3">
               <label className="block text-sm font-medium text-gray-700">
@@ -365,6 +337,7 @@ const NewXray = () => {
           </div>
         </div>
 
+        {/* --- Billing Information Section --- */}
         <div className="p-6 border-t border-gray-100">
           <div className="flex items-center mb-6">
             <FaMoneyBillAlt className="text-blue-500" />
@@ -380,7 +353,7 @@ const NewXray = () => {
               <div className="relative">
                 <input
                   type="number"
-                  {...register("billAmount")}
+                  {...register("billAmount", { valueAsNumber: true })}
                   placeholder="0.00"
                   step="0.01"
                   className={`block w-full px-4 py-2 border rounded-lg pl-8 ${
@@ -395,22 +368,24 @@ const NewXray = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Discount
+                Discount %
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  {...register("discount")}
+                  {...register("discountPercent", { valueAsNumber: true })}
                   placeholder="0"
                   className={`block w-full px-4 py-2 border rounded-lg pr-8 ${
-                    errors.discount ? "border-red-500" : "border-gray-300"
+                    errors.discountPercent
+                      ? "border-red-500"
+                      : "border-gray-300"
                   }`}
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <span className="text-gray-500">%</span>
                 </div>
               </div>
-              {renderError("discount")}
+              {renderError("discountPercent")}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -419,7 +394,7 @@ const NewXray = () => {
               <div className="relative">
                 <input
                   type="number"
-                  {...register("netBillAmount")}
+                  {...register("netBillAmount", { valueAsNumber: true })}
                   readOnly
                   className="block w-full px-4 py-2 border rounded-lg bg-gray-100 pl-8"
                 />
@@ -435,7 +410,7 @@ const NewXray = () => {
               <div className="relative">
                 <input
                   type="number"
-                  {...register("commissionPercent")}
+                  {...register("commissionPercent", { valueAsNumber: true })}
                   placeholder="0"
                   className={`block w-full px-4 py-2 border rounded-lg pr-8 ${
                     errors.commissionPercent
@@ -456,7 +431,7 @@ const NewXray = () => {
               <div className="relative">
                 <input
                   type="number"
-                  {...register("doctorEarning")}
+                  {...register("doctorEarning", { valueAsNumber: true })}
                   readOnly
                   className="block w-full px-4 py-2 border rounded-lg bg-gray-100 pl-8"
                 />
@@ -468,16 +443,17 @@ const NewXray = () => {
           </div>
         </div>
 
+        {/* --- Action Buttons --- */}
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
           <button
             type="button"
-            onClick={() => reset()}
+            onClick={() => window.location.reload()} // Simple reset by reloading the page
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 mr-3"
           >
-            Reset
+            Cancel
           </button>
           <LoadingButton isLoading={isPending} type="submit">
-            {isPending ? "Saving..." : "Save X-ray Report"}
+            {isPending ? "Saving..." : "Save Report"}
           </LoadingButton>
         </div>
       </form>

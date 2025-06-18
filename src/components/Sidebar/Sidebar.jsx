@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation , useNavigate} from "react-router-dom";
 import { sidebar2Data, sidebar3Data, sidebarData } from "../../assets/data";
 import {
   FiLogOut,
@@ -10,10 +10,34 @@ import {
 } from "react-icons/fi";
 import { MdLocalHospital } from "react-icons/md";
 
+
+import { useDispatch, useSelector } from "react-redux";
+import { logoutAsyncUser } from "../../redux/asyncThunks/authThunks";
+import { toast } from "sonner";
+
 const Sidebar = React.memo(() => {
   const [collapsed, setCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState({});
   const location = useLocation();
+
+    const navigate = useNavigate();
+  
+    const dispatch = useDispatch();
+  
+    const handleLogout = async () => {
+      try {
+        const res = await dispatch(logoutAsyncUser()).unwrap();
+  
+        if (res?.message) {
+          localStorage.removeItem("user");
+          toast.success(res.message);
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Logout failed:", error);
+        toast.error(error?.message || "Logout failed");
+      }
+    };
 
   const toggleExpand = (key) => {
     setExpandedItems((prev) => ({
@@ -188,9 +212,9 @@ const Sidebar = React.memo(() => {
                 <div className="text-xs text-gray-500">Administrator</div>
               </div>
             </Link>
-            <Link to="/login" className="text-gray-500 hover:text-gray-700">
+            <span onClick={handleLogout} className="text-gray-500 cursor-pointer hover:text-gray-700">
               <FiLogOut />
-            </Link>
+            </span>
           </>
         ) : (
           <Link to="/profile">

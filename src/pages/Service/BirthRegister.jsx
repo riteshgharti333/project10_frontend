@@ -9,24 +9,13 @@ import {
 } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import BackButton from "../../components/BackButton/BackButton";
 import { toast } from "sonner";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
 import { useCreateBirthRecord } from "../../feature/hooks/useBirth";
+import { birthSchema } from "@hospital/schemas";
 
-const birthSchema = z.object({
-  birthTime: z.string().min(1, "Birth time is required"),
-  birthDate: z.coerce.date(),
-  babySex: z.string().min(1, "Baby's sex is required"),
-  babyWeight: z.number().positive("Weight must be positive"),
-  fatherName: z.string().min(1, "Father's name is required"),
-  motherName: z.string().min(1, "Mother's name is required"),
-  mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
-  deliveryType: z.string().min(1, "Delivery type is required"),
-  birthPlace: z.string().min(1, "Place of birth is required"),
-  attendantName: z.string().min(1, "Attendant's name is required"),
-});
+import {useNavigate} from "react-router-dom"
 
 const formFields = [
   {
@@ -56,7 +45,7 @@ const formFields = [
       {
         label: "Baby's Weight (kg)",
         type: "number",
-        name: "babyWeight",
+        name: "babyWeightKg",
         placeholder: "Enter baby's weight",
         step: "0.01",
         icon: <FaWeight className="text-gray-400" />,
@@ -70,19 +59,19 @@ const formFields = [
       {
         label: "Father's Name",
         type: "text",
-        name: "fatherName",
+        name: "fathersName",
         placeholder: "Enter father's full name",
       },
       {
         label: "Mother's Name",
         type: "text",
-        name: "motherName",
+        name: "mothersName",
         placeholder: "Enter mother's full name",
       },
       {
         label: "Mobile Number",
         type: "tel",
-        name: "mobile",
+        name: "mobileNumber",
         placeholder: "Enter mobile number",
         icon: <FaPhone className="text-gray-400" />,
       },
@@ -102,14 +91,14 @@ const formFields = [
       {
         label: "Place of Birth",
         type: "select",
-        name: "birthPlace",
+        name: "placeOfBirth",
         placeholder: "Select birth place",
         options: ["Hospital", "Home", "Clinic", "Other"],
       },
       {
         label: "Attendant's Name",
         type: "text",
-        name: "attendantName",
+        name: "attendantsName",
         placeholder: "Enter attendant's name",
       },
     ],
@@ -117,6 +106,9 @@ const formFields = [
 ];
 
 const BirthRegister = () => {
+
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -128,26 +120,35 @@ const BirthRegister = () => {
       birthDate: "",
       birthTime: "",
       babySex: "",
-      babyWeight: 0,
-      fatherName: "",
-      motherName: "",
-      mobile: "",
+      babyWeightKg: 0,
+      fathersName: "",
+      mothersName: "",
+      mobileNumber: "",
       deliveryType: "",
-      birthPlace: "",
-      attendantName: "",
+      placeOfBirth: "",
+      attendantsName: "",
     },
   });
 
   const { mutateAsync, isPending } = useCreateBirthRecord();
 
   const onSubmit = async (formData) => {
-    try {
-      await mutateAsync(formData);
-      reset();
-    } catch (error) {
-      console.error(error);
+    const submissionData = {
+      ...formData,
+      birthDate: new Date(formData.birthDate),
+    };
+
+    const response = await mutateAsync(submissionData);
+  
+  console.log(response)
+    if (response?.data?.success) {
+      toast.success(response?.data?.message);
+      navigate(`/birth/${response.data.data.id}`);
     }
   };
+
+  // All fields are required in this schema, but if you had optional fields:
+  // const optionalFields = ['fieldName1', 'fieldName2'];
 
   return (
     <div className="mx-auto">
@@ -191,6 +192,7 @@ const BirthRegister = () => {
                   <div key={fieldIndex} className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
                       {field.label}
+                      {/* All fields are required in this schema, so all have asterisk */}
                       <span className="text-red-500 ml-1">*</span>
                     </label>
 
@@ -203,7 +205,10 @@ const BirthRegister = () => {
                           }`}
                           aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
+                          {" "}
+                          <option value="" disabled selected hidden>
+                            {field.placeholder}
+                          </option>
                           {field.options.map((option, i) => (
                             <option key={i} value={option}>
                               {option}

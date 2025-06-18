@@ -1,120 +1,183 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaUserNurse,
   FaPhone,
   FaIdCard,
   FaHome,
-  FaArrowLeft,
+  FaEdit,
+  FaTrash,
+  FaSave,
 } from "react-icons/fa";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import BackButton from "../../components/BackButton/BackButton";
+import { toast } from "sonner";
+import {
+  useUpdateNurse,
+  useDeleteNurse,
+  useGetNurseById,
+} from "../../feature/hooks/useNurse";
+import { useNavigate, useParams } from "react-router-dom";
+import { nurseSchema } from "@hospital/schemas";
+import Loader from "../../components/Loader/Loader";
+import NoData from "../../components/NoData/NoData";
+import {
+  EditButton,
+  DeleteButton,
+  CancelButton,
+  SaveButton,
+} from "../../components/ActionButtons/ActionButtons";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+
+const formFields = [
+  {
+    section: "Nurse Information",
+    icon: <FaUserNurse className="text-blue-500" />,
+    fields: [
+      {
+        label: "Full Name",
+        type: "text",
+        name: "fullName",
+        placeholder: "Enter nurse's full name",
+        icon: <FaUserNurse className="text-gray-400" />,
+      },
+      {
+        label: "Mobile Number",
+        type: "tel",
+        name: "mobileNumber",
+        placeholder: "Enter mobile number",
+        icon: <FaPhone className="text-gray-400" />,
+      },
+      {
+        label: "Registration No",
+        type: "text",
+        name: "registrationNo",
+        placeholder: "Enter registration number",
+        icon: <FaIdCard className="text-gray-400" />,
+      },
+      {
+        label: "Department",
+        type: "select",
+        name: "department",
+        placeholder: "Select department",
+        options: ["General", "ICU", "Pediatrics", "Emergency", "Surgery"],
+      },
+    ],
+  },
+  {
+    section: "Additional Details",
+    icon: <FaHome className="text-blue-500" />,
+    fields: [
+      {
+        label: "Address",
+        type: "textarea",
+        name: "address",
+        placeholder: "Enter full address",
+      },
+      {
+        label: "Shift",
+        type: "select",
+        name: "shift",
+        placeholder: "Select shift",
+        options: ["Day", "Night", "Rotating"],
+      },
+      {
+        label: "Status",
+        type: "select",
+        name: "status",
+        placeholder: "Select status",
+        options: ["Active", "Inactive", "On Leave"],
+      },
+    ],
+  },
+];
 
 const EditNurse = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    mobile: "",
-    regNo: "",
-    address: "",
-    department: "",
-    shift: "Day",
-    status: "Active",
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [editMode, setEditMode] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const { data: nurseData, isLoading } = useGetNurseById(id);
+  const { mutateAsync: updateNurse, isPending: isUpdating } = useUpdateNurse();
+  const { mutateAsync: deleteNurse, isPending: isDeleting } = useDeleteNurse();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(nurseSchema),
   });
 
-  const formFields = [
-    {
-      section: "Nurse Information",
-      icon: <FaUserNurse className="text-blue-500" />,
-      fields: [
-        {
-          label: "Full Name",
-          type: "text",
-          name: "name",
-          placeholder: "Enter nurse's full name",
-          icon: <FaUserNurse className="text-gray-400" />,
-        },
-        {
-          label: "Mobile Number",
-          type: "tel",
-          name: "mobile",
-          placeholder: "Enter mobile number",
-          icon: <FaPhone className="text-gray-400" />,
-        },
-        {
-          label: "Registration No",
-          type: "text",
-          name: "regNo",
-          placeholder: "Enter registration number",
-          icon: <FaIdCard className="text-gray-400" />,
-        },
-        {
-          label: "Department",
-          type: "select",
-          name: "department",
-          placeholder: "Select department",
-          options: ["General", "ICU", "Pediatrics", "Emergency", "Surgery"],
-        },
-      ],
-    },
-    {
-      section: "Additional Details",
-      icon: <FaHome className="text-blue-500" />,
-      fields: [
-        {
-          label: "Address",
-          type: "textarea",
-          name: "address",
-          placeholder: "Enter full address",
-        },
-        {
-          label: "Shift",
-          type: "select",
-          name: "shift",
-          placeholder: "Select shift",
-          options: ["Day", "Night", "Rotating"],
-        },
-        {
-          label: "Status",
-          type: "select",
-          name: "status",
-          placeholder: "Select status",
-          options: ["Active", "Inactive", "On Leave"],
-        },
-      ],
-    },
-  ];
+  const getDisabledStyles = (isDisabled) =>
+    isDisabled ? "bg-gray-100 cursor-not-allowed opacity-90" : "";
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  useEffect(() => {
+    if (nurseData) {
+      reset(nurseData);
+    }
+  }, [nurseData, reset]);
+
+  const onSubmit = async (formData) => {
+    try {
+      const response = await updateNurse({ id, data: formData });
+
+      if (response?.data?.success) {
+        toast.success(response.data.message);
+        setEditMode(false);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to update nurse record");
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Add form submission logic here
+  const handleCancel = () => {
+    reset(nurseData);
+    setEditMode(false);
   };
+
+  const handleDelete = async () => {
+    try {
+      const { data } = await deleteNurse(id);
+      if (data && data.message) {
+        toast.success(data.message);
+        navigate("/nurses");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to delete nurse record");
+    } finally {
+      setShowDeleteModal(false);
+    }
+  };
+
+  if (isLoading) return <Loader />;
+  if (!nurseData) return <NoData />;
 
   return (
     <div className="mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center">
-          <BackButton />
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        loading={isDeleting}
+      />
+
+      <div className="mb-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <BackButton />
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center ml-2">
               <FaUserNurse className="mr-2 text-blue-500" />
-              Add New Nurse
+              {editMode ? "Edit Nurse" : "View Nurse"}
             </h2>
-            <p className="text-gray-600 mt-1">
-              Please enter all required details for the new nurse
-            </p>
           </div>
         </div>
       </div>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
       >
         {formFields.map((section, sectionIndex) => (
@@ -132,89 +195,122 @@ const EditNurse = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {section.fields.map((field, fieldIndex) => (
-                <div
-                  key={fieldIndex}
-                  className={`space-y-1 ${
-                    field.type === "textarea" ? "md:col-span-2" : ""
-                  }`}
-                >
-                  <label className="block text-sm font-medium text-gray-700">
-                    {field.label}
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
+              {section.fields.map((field, fieldIndex) => {
+                const error = errors[field.name];
+                const fieldValue = nurseData[field.name];
 
-                  {field.type === "select" ? (
-                    <div className="relative">
-                      <select
-                        name={field.name}
-                        value={formData[field.name]}
-                        onChange={handleChange}
-                        className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8"
-                        required
-                      >
-                        <option value="">{field.placeholder}</option>
-                        {field.options.map((option, i) => (
-                          <option key={i} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg
-                          className="h-5 w-5 text-gray-400"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
+                return (
+                  <div
+                    key={fieldIndex}
+                    className={`space-y-1 ${
+                      field.type === "textarea" ? "md:col-span-2" : ""
+                    }`}
+                  >
+                    <label className="block text-sm font-medium text-gray-700">
+                      {field.label}
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+
+                    {field.type === "select" ? (
+                      <div className="relative">
+                        <select
+                          {...register(field.name)}
+                          disabled={!editMode}
+                          className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none pr-8 ${
+                            error ? "border-red-500" : "border-gray-300"
+                          } ${getDisabledStyles(!editMode)}`}
+                          aria-invalid={error ? "true" : "false"}
                         >
-                          <path
-                            fillRule="evenodd"
-                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  ) : field.type === "textarea" ? (
-                    <textarea
-                      name={field.name}
-                      value={formData[field.name]}
-                      onChange={handleChange}
-                      placeholder={field.placeholder}
-                      rows="3"
-                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  ) : (
-                    <div className="relative">
-                      <input
-                        type={field.type}
-                        name={field.name}
-                        value={formData[field.name]}
-                        onChange={handleChange}
-                        placeholder={field.placeholder}
-                        className={`block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          field.icon ? "pl-10" : ""
-                        }`}
-                        required
-                      />
-                      {field.icon && (
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          {field.icon}
+                          <option value="" disabled hidden>
+                            {field.placeholder}
+                          </option>
+                          {field.options.map((option, i) => (
+                            <option
+                              key={i}
+                              value={option}
+                              selected={fieldValue === option}
+                            >
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <svg
+                            className="h-5 w-5 text-gray-400"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+                      </div>
+                    ) : field.type === "textarea" ? (
+                      <textarea
+                        {...register(field.name)}
+                        disabled={!editMode}
+                        rows={3}
+                        placeholder={field.placeholder}
+                        defaultValue={fieldValue}
+                        className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                          error ? "border-red-500" : "border-gray-300"
+                        } ${getDisabledStyles(!editMode)}`}
+                        aria-invalid={error ? "true" : "false"}
+                      />
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type={field.type}
+                          {...register(field.name)}
+                          disabled={!editMode}
+                          placeholder={field.placeholder}
+                          defaultValue={fieldValue}
+                          className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                            field.icon ? "pl-10" : ""
+                          } ${
+                            error ? "border-red-500" : "border-gray-300"
+                          } ${getDisabledStyles(!editMode)}`}
+                          aria-invalid={error ? "true" : "false"}
+                        />
+                        {field.icon && (
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            {field.icon}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {error && (
+                      <p className="text-red-600 text-sm mt-1" role="alert">
+                        {error.message}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
 
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-          <button type="submit" className="btn-primary">
-            Add Nurse
-          </button>
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+          {!editMode ? (
+            <>
+              <DeleteButton
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+              />
+              <EditButton onClick={() => setEditMode(true)} />
+            </>
+          ) : (
+            <>
+              <CancelButton onClick={handleCancel} />
+              <SaveButton type="submit" isLoading={isUpdating} />
+            </>
+          )}
         </div>
       </form>
     </div>

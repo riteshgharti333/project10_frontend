@@ -6,15 +6,9 @@ import { z } from "zod";
 import BackButton from "../../components/BackButton/BackButton";
 import { toast } from "sonner";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
-
-const pharmacistSchema = z.object({
-  name: z.string().min(1, "Full name is required"),
-  mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
-  regNo: z.string().min(1, "Registration number is required"),
-  address: z.string().min(1, "Address is required"),
-  department: z.string().default("Pharmacy"),
-  status: z.enum(["Active", "Inactive", "On Leave"]).default("Active"),
-});
+import { pharmacistSchema } from "@hospital/schemas";
+import { useCreatePharmacist } from "../../feature/hooks/usePharmacist";
+import { useNavigate } from "react-router-dom";
 
 const formFields = [
   {
@@ -24,23 +18,26 @@ const formFields = [
       {
         label: "Full Name",
         type: "text",
-        name: "name",
+        name: "fullName", // Changed from "name"
         placeholder: "Enter pharmacist's full name",
         icon: <FaUser className="text-gray-400" />,
+        required: true,
       },
       {
         label: "Mobile Number",
         type: "tel",
-        name: "mobile",
+        name: "mobileNumber", // Changed from "mobile"
         placeholder: "Enter mobile number",
         icon: <FaPhone className="text-gray-400" />,
+        required: true,
       },
       {
         label: "Registration No",
         type: "text",
-        name: "regNo",
+        name: "registrationNo", // Changed from "regNo"
         placeholder: "Enter registration number",
         icon: <FaIdCard className="text-gray-400" />,
+        required: true,
       },
     ],
   },
@@ -53,6 +50,7 @@ const formFields = [
         type: "textarea",
         name: "address",
         placeholder: "Enter full address",
+        required: true,
       },
       {
         label: "Department",
@@ -68,12 +66,14 @@ const formFields = [
         name: "status",
         placeholder: "Select status",
         options: ["Active", "Inactive", "On Leave"],
+        required: false,
       },
     ],
   },
 ];
 
 const NewPharmacist = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -82,34 +82,24 @@ const NewPharmacist = () => {
   } = useForm({
     resolver: zodResolver(pharmacistSchema),
     defaultValues: {
-      name: "",
-      mobile: "",
-      regNo: "",
+      fullName: "",       // Updated to match schema
+      mobileNumber: "",   // Updated to match schema
+      registrationNo: "", // Updated to match schema
       address: "",
       department: "Pharmacy",
       status: "Active",
     },
   });
 
-  const [isPending, setIsPending] = React.useState(false);
+  const { mutateAsync, isPending } = useCreatePharmacist();
 
   const onSubmit = async (data) => {
-    try {
-      setIsPending(true);
-      // Replace with your actual API call
-      // const response = await createPharmacist(data);
-      // Simulating API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      toast.success("Pharmacist created successfully");
-      reset();
-    } catch (error) {
-      console.error(error);
-      toast.error(error?.response?.data?.message || "Failed to create pharmacist");
-    } finally {
-      setIsPending(false);
-    }
+   
+      const response = await mutateAsync(data);
+      if (response?.data?.success) {
+        navigate(`/pharmacist/${response.data.id}`); 
   };
+}
 
   return (
     <div className="mx-auto">
@@ -135,9 +125,7 @@ const NewPharmacist = () => {
         {formFields.map((section, sectionIndex) => (
           <div
             key={sectionIndex}
-            className={`p-6 ${
-              sectionIndex !== 0 ? "border-t border-gray-100" : ""
-            }`}
+            className={`p-6 ${sectionIndex !== 0 ? "border-t border-gray-100" : ""}`}
           >
             <div className="flex items-center mb-6">
               {section.icon}
@@ -150,27 +138,22 @@ const NewPharmacist = () => {
               {section.fields.map((field, fieldIndex) => {
                 const error = errors[field.name];
                 return (
-                  <div
-                    key={fieldIndex}
-                    className={`space-y-1 ${
-                      field.type === "textarea" ? "md:col-span-2" : ""
-                    }`}
-                  >
+                  <div key={fieldIndex} className={`space-y-1 ${field.type === "textarea" ? "md:col-span-2" : ""}`}>
                     <label className="block text-sm font-medium text-gray-700">
                       {field.label}
-                      {!field.readOnly && <span className="text-red-500 ml-1">*</span>}
+                      {field.required && <span className="text-red-500 ml-1">*</span>}
                     </label>
 
                     {field.type === "select" ? (
                       <div className="relative">
                         <select
                           {...register(field.name)}
-                          className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8 ${
-                            error ? "border-red-500" : "border-gray-300"
-                          }`}
+                          className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8 ${error ? "border-red-500" : "border-gray-300"}`}
                           aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
+                          <option value="" disabled hidden>
+                            {field.placeholder}
+                          </option>
                           {field.options.map((option, i) => (
                             <option key={i} value={option}>
                               {option}
@@ -197,9 +180,7 @@ const NewPharmacist = () => {
                         {...register(field.name)}
                         rows={3}
                         placeholder={field.placeholder}
-                        className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          error ? "border-red-500" : "border-gray-300"
-                        }`}
+                        className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${error ? "border-red-500" : "border-gray-300"}`}
                         aria-invalid={error ? "true" : "false"}
                       />
                     ) : (
@@ -208,11 +189,7 @@ const NewPharmacist = () => {
                           type={field.type}
                           {...register(field.name)}
                           placeholder={field.placeholder}
-                          className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            field.icon ? "pl-10" : ""
-                          } ${error ? "border-red-500" : "border-gray-300"} ${
-                            field.readOnly ? "bg-gray-100" : ""
-                          }`}
+                          className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${field.icon ? "pl-10" : ""} ${error ? "border-red-500" : "border-gray-300"} ${field.readOnly ? "bg-gray-100" : ""}`}
                           aria-invalid={error ? "true" : "false"}
                           readOnly={field.readOnly}
                         />

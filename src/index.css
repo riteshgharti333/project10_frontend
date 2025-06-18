@@ -25,6 +25,18 @@
   @apply bg-red-500 hover:bg-red-600 text-white;
 }
 
+.btn-cancel {
+  @apply flex items-center px-4 py-2 border cursor-pointer border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-200 mr-3;
+}
+
+.btn-edit {
+  @apply flex items-center px-4 cursor-pointer py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors;
+}
+
+.btn-delete {
+  @apply flex items-center px-4 py-2 cursor-pointer bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors;
+}
+
 a {
   text-decoration: none;
 }

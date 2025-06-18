@@ -10,13 +10,12 @@ const CreationTable = () => {
 
    const { data, error, isLoading, isError } = useGetBrands();
 
-   console.log(data)
 
   const columns = useMemo(
     () => [
       {
-        accessorKey: "name",
-        header: "Department Name",
+        accessorKey: "brandName",
+        header: "Brand Name",
         cell: (info) => info.getValue(),
       },
       {

@@ -7,13 +7,8 @@ import BackButton from "../../components/BackButton/BackButton";
 import { toast } from "sonner";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
 import { useCreateBed } from "../../feature/hooks/useBed";
-
-const bedSchema = z.object({
-  bedNumber: z.string().min(1, "Bed number is required"),
-  wardNumber: z.string().min(1, "Ward number is required"),
-  status: z.enum(["Available", "Occupied", "Maintenance"]).default("Available"),
-  description: z.string().optional(),
-});
+import { bedSchema } from "@hospital/schemas";
+import { useNavigate } from "react-router-dom";
 
 const formFields = [
   {
@@ -61,6 +56,8 @@ const formFields = [
 ];
 
 const NewBed = () => {
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -71,7 +68,7 @@ const NewBed = () => {
     defaultValues: {
       bedNumber: "",
       wardNumber: "",
-      status: "Available",
+      status: "",
       description: "",
     },
   });
@@ -79,25 +76,14 @@ const NewBed = () => {
   const { mutateAsync, isPending } = useCreateBed();
 
   const onSubmit = async (data) => {
-    try {
-      // Clean up the data - remove empty description if not provided
-      const cleanedData = {
-        ...data,
-        description: data.description?.trim() || undefined,
-      };
+    const cleanedData = {
+      ...data,
+      description: data.description?.trim() || undefined,
+    };
+    const response = await mutateAsync(cleanedData);
 
-      const response = await mutateAsync(cleanedData);
-      const { success, message, data: createdBed } = response;
-
-      if (success) {
-        toast.success(message || "Bed added successfully");
-        reset(); // Reset form after successful submission
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error(
-        error?.response?.data?.message || "Failed to add bed"
-      );
+    if (response?.data?.success) {
+      navigate("/bed/:id");
     }
   };
 
@@ -162,7 +148,9 @@ const NewBed = () => {
                           }`}
                           aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
+                          <option value="" disabled selected hidden>
+                            {field.placeholder}
+                          </option>
                           {field.options.map((option, i) => (
                             <option key={i} value={option}>
                               {option}

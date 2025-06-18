@@ -6,6 +6,8 @@ import {
   getBedRecordByIdAPI,
   updateBedRecordAPI,
 } from "../api/bedApi";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../utils/errorUtils";
 
 export const useGetBeds = () => {
   return useQuery({
@@ -14,6 +16,8 @@ export const useGetBeds = () => {
       const { data } = await getAllBedRecordsAPI();
       return data.data;
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
+    select: (data) => data || [],
   });
 };
 
@@ -24,7 +28,8 @@ export const useGetBedById = (id) => {
       const { data } = await getBedRecordByIdAPI(id);
       return data.data;
     },
-    enabled: !!id, // prevents query from running without id
+    enabled: !!id,
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -32,9 +37,11 @@ export const useCreateBed = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createBedRecordAPI,
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.message || "Bed created successfully");
       queryClient.invalidateQueries({ queryKey: ["bed"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -42,9 +49,11 @@ export const useUpdateBed = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => updateBedRecordAPI(id, data),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.message || "Bed updated successfully");
       queryClient.invalidateQueries({ queryKey: ["bed"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -52,8 +61,10 @@ export const useDeleteBed = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteBedRecordAPI,
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.message || "Bed deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["bed"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };

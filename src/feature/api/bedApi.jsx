@@ -10,7 +10,7 @@ export const getBedRecordByIdAPI = (id) =>
   axiosInstance.get(`/bed/${id}`);
 
 export const updateBedRecordAPI = (id, data) =>
-  axiosInstance.patch(`/bed/${id}`, data);
+  axiosInstance.put(`/bed/${id}`, data);
 
 export const deleteBedRecordAPI = (id) =>
   axiosInstance.delete(`/bed/${id}`);

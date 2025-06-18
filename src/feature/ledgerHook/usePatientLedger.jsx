@@ -7,6 +7,8 @@ import {
   updatePatientLedgerEntryAPI,
   deletePatientLedgerEntryAPI,
 } from "../ledgerApi/patientLedgerApi";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../utils/errorUtils";
 
 export const useGetPatientLedgerEntries = () => {
   return useQuery({
@@ -15,6 +17,8 @@ export const useGetPatientLedgerEntries = () => {
       const { data } = await getAllPatientLedgerEntriesAPI();
       return data.data;
     },
+    select: (data) => data || [],
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -26,6 +30,7 @@ export const useGetPatientLedgerEntryById = (id) => {
       return data.data;
     },
     enabled: !!id,
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -36,6 +41,8 @@ export const useGetPatientBalance = () => {
       const { data } = await getPatientBalanceAPI();
       return data.data;
     },
+    select: (data) => data ?? {},
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -43,9 +50,11 @@ export const useCreatePatientLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createPatientLedgerEntryAPI,
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.data?.message || "Patient entry created successfully");
       queryClient.invalidateQueries({ queryKey: ["patientLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -53,9 +62,11 @@ export const useUpdatePatientLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => updatePatientLedgerEntryAPI(id, data),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.data?.message || "Patient entry updated successfully");
       queryClient.invalidateQueries({ queryKey: ["patientLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -63,8 +74,10 @@ export const useDeletePatientLedgerEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deletePatientLedgerEntryAPI,
-    onSuccess: () => {
+    onSuccess: (response) => {
+      toast.success(response?.data?.message || "Patient entry deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["patientLedgerEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };

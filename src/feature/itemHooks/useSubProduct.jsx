@@ -6,15 +6,18 @@ import {
   updateProductEntryAPI,
   deleteProductEntryAPI,
 } from "../itemApi/subProductApi";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../utils/errorUtils";
 
 export const useGetProductEntries = () => {
   return useQuery({
     queryKey: ["productEntries"],
     queryFn: async () => {
       const { data } = await getAllProductEntriesAPI();
-      console.log(data)
       return data.data;
     },
+    select: (data) => data || [],
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -26,6 +29,7 @@ export const useGetProductEntryById = (id) => {
       return data.data;
     },
     enabled: !!id,
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -33,9 +37,11 @@ export const useCreateProductEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createProductEntryAPI,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.message || "Product entry created successfully");
       queryClient.invalidateQueries({ queryKey: ["productEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -43,9 +49,11 @@ export const useUpdateProductEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => updateProductEntryAPI(id, data),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.message || "Product entry updated successfully");
       queryClient.invalidateQueries({ queryKey: ["productEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };
 
@@ -53,8 +61,10 @@ export const useDeleteProductEntry = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteProductEntryAPI,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.message || "Product entry deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["productEntries"] });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 };

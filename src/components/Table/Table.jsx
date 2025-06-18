@@ -161,7 +161,7 @@ const Table = ({ data, columns, filters = {}, getRowProps, path }) => {
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  onClick={() => handleRowClick(row.original._id)}
+                  onClick={() => handleRowClick(row.original.id)}
                   {...(getRowProps ? getRowProps(row) : {})}
                   className={`hover:bg-blue-50 cursor-pointer transition-colors duration-150 ${
                     getRowProps ? getRowProps(row)?.className || "" : ""

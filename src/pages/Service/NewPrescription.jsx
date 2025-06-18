@@ -13,52 +13,23 @@ import { z } from "zod";
 import { toast } from "sonner";
 import BackButton from "../../components/BackButton/BackButton";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
-
-const medicineSchema = z.object({
-  medicineName: z.string().min(1, "Medicine name is required"),
-  description: z.string().min(1, "Description is required"),
-});
-
-const prescriptionSchema = z.object({
-  prescriptionDate: z.string().min(1, "Prescription date is required"),
-  doctorId: z.string().min(1, "A doctor must be selected"),
-  patientId: z.string().min(1, "A patient must be selected"),
-  prescriptionFile: z.any().optional(),
-  medicines: z
-    .array(medicineSchema)
-    .min(1, "At least one medicine is required"),
-});
-
-const useCreatePrescription = () => {
-  const [isPending, setIsPending] = React.useState(false);
-  const mutateAsync = (data) => {
-    setIsPending(true);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        setIsPending(false);
-        console.log("Submitting Prescription Data:", data);
-        resolve({
-          success: true,
-          message: "Prescription created successfully!",
-          data: { id: `PRES-${Date.now()}`, ...data },
-        });
-      }, 1500);
-    });
-  };
-  return { mutateAsync, isPending };
-};
+import { prescriptionSchema } from "@hospital/schemas";
+import { medicineSchema } from "@hospital/schemas";
+import { useCreatePrescription } from "../../feature/hooks/usePrescription";
+import { useNavigate } from "react-router-dom";
 
 const NewPrescription = () => {
+  const navigate = useNavigate();
   const [doctors] = useState([
-    { id: "1", name: "Dr. Smith" },
-    { id: "2", name: "Dr. Johnson" },
-    { id: "3", name: "Dr. Williams" },
+    { id: 1, name: "Dr. Smith" }, // Changed to numbers to match schema
+    { id: 2, name: "Dr. Johnson" },
+    { id: 3, name: "Dr. Williams" },
   ]);
 
   const [patients] = useState([
-    { id: "101", name: "John Doe" },
-    { id: "102", name: "Jane Smith" },
-    { id: "103", name: "Robert Johnson" },
+    { id: 1, name: "John Doe" }, // Changed to numbers to match schema
+    { id: 2, name: "Jane Smith" },
+    { id: 3, name: "Robert Johnson" },
   ]);
 
   const {
@@ -70,9 +41,11 @@ const NewPrescription = () => {
   } = useForm({
     resolver: zodResolver(prescriptionSchema),
     defaultValues: {
-      prescriptionDate: "",
-      doctorId: "",
-      patientId: "",
+      prescriptionDate: new Date().toISOString().split("T")[0],
+      doctorId: undefined,
+      patientId: undefined,
+      prescriptionDoc: "",
+      status: "Active",
       medicines: [{ medicineName: "", description: "" }],
     },
   });
@@ -85,22 +58,23 @@ const NewPrescription = () => {
   const { mutateAsync, isPending } = useCreatePrescription();
 
   const onSubmit = async (data) => {
-    try {
-      const formDataToSubmit = {
-        ...data,
-        prescriptionFile: data.prescriptionFile[0]?.name || "No file uploaded",
-      };
+    const payload = {
+      ...data,
+      prescriptionDate: new Date(data.prescriptionDate).toISOString(),
+      doctorId: Number(data.doctorId),
+      patientId: Number(data.patientId),
+      prescriptionDoc: data.prescriptionDoc || "",
+      medicines: data.medicines.map((med) => ({
+        medicineName: med.medicineName.trim(),
+        description: med.description.trim(),
+      })),
+    };
 
-      const response = await mutateAsync(formDataToSubmit);
-      if (response.success) {
-        toast.success(response.message);
-        reset();
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error(
-        error?.response?.data?.message || "Failed to create prescription"
-      );
+    console.log(payload);
+
+    const response = await mutateAsync(payload);
+    if (response?.data?.success) {
+      navigate("/prescription/:id");
     }
   };
 
@@ -141,9 +115,11 @@ const NewPrescription = () => {
               <div className="relative">
                 <input
                   type="date"
-                  {...register("prescriptionDate")}
+                  {...register("prescriptionDate", { required: true })}
                   className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10 ${
-                    errors.prescriptionDate ? "border-red-500" : "border-gray-300"
+                    errors.prescriptionDate
+                      ? "border-red-500"
+                      : "border-gray-300"
                   }`}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -151,7 +127,9 @@ const NewPrescription = () => {
                 </div>
               </div>
               {errors.prescriptionDate && (
-                <p className="text-red-600 text-sm mt-1">{errors.prescriptionDate.message}</p>
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.prescriptionDate.message}
+                </p>
               )}
             </div>
 
@@ -160,12 +138,17 @@ const NewPrescription = () => {
                 Doctor<span className="text-red-500 ml-1">*</span>
               </label>
               <select
-                {...register("doctorId")}
+                {...register("doctorId", {
+                  required: "Doctor is required",
+                  valueAsNumber: true,
+                })}
                 className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white ${
                   errors.doctorId ? "border-red-500" : "border-gray-300"
                 }`}
               >
-                <option value="">Select Doctor</option>
+                <option value="" disabled selected hidden>
+                  Select Doctor
+                </option>
                 {doctors.map((doctor) => (
                   <option key={doctor.id} value={doctor.id}>
                     {doctor.name}
@@ -173,7 +156,9 @@ const NewPrescription = () => {
                 ))}
               </select>
               {errors.doctorId && (
-                <p className="text-red-600 text-sm mt-1">{errors.doctorId.message}</p>
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.doctorId.message}
+                </p>
               )}
             </div>
 
@@ -182,12 +167,17 @@ const NewPrescription = () => {
                 Patient<span className="text-red-500 ml-1">*</span>
               </label>
               <select
-                {...register("patientId")}
+                {...register("patientId", {
+                  required: "Patient is required",
+                  valueAsNumber: true,
+                })}
                 className={`block w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white ${
                   errors.patientId ? "border-red-500" : "border-gray-300"
                 }`}
               >
-                <option value="">Select Patient</option>
+                <option value="" disabled selected hidden>
+                  Select Patient
+                </option>
                 {patients.map((patient) => (
                   <option key={patient.id} value={patient.id}>
                     {patient.name}
@@ -195,7 +185,9 @@ const NewPrescription = () => {
                 ))}
               </select>
               {errors.patientId && (
-                <p className="text-red-600 text-sm mt-1">{errors.patientId.message}</p>
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.patientId.message}
+                </p>
               )}
             </div>
 
@@ -205,12 +197,21 @@ const NewPrescription = () => {
               </label>
               <input
                 type="file"
-                {...register("prescriptionFile")}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+
+                  if (file) {
+                    const dummyUrl = `https://example.com/${file.name}`;
+                  }
+                }}
                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 accept=".pdf,.jpg,.png,.doc,.docx"
               />
-               {errors.prescriptionFile && (
-                <p className="text-red-600 text-sm mt-1">{errors.prescriptionFile.message}</p>
+
+              {errors.prescriptionDoc && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.prescriptionDoc.message}
+                </p>
               )}
             </div>
           </div>
@@ -227,8 +228,10 @@ const NewPrescription = () => {
               <FaPlus className="mr-1" /> Add Medicine
             </button>
           </div>
-          {errors.medicines && !errors.medicines.root && (
-             <p className="text-red-600 text-sm mb-4">{errors.medicines.message}</p>
+          {errors.medicines && (
+            <p className="text-red-600 text-sm mb-4">
+              {errors.medicines.message || "At least one medicine is required"}
+            </p>
           )}
 
           <div className="space-y-4">
@@ -242,14 +245,20 @@ const NewPrescription = () => {
                     Medicine Name<span className="text-red-500 ml-1">*</span>
                   </label>
                   <input
-                    {...register(`medicines.${index}.medicineName`)}
+                    {...register(`medicines.${index}.medicineName`, {
+                      required: "Medicine name is required",
+                    })}
                     placeholder="e.g., Paracetamol"
                     className={`block w-full px-3 py-2 border rounded-lg ${
-                      errors.medicines?.[index]?.medicineName ? "border-red-500" : "border-gray-300"
+                      errors.medicines?.[index]?.medicineName
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                   />
                   {errors.medicines?.[index]?.medicineName && (
-                    <p className="text-red-600 text-sm mt-1">{errors.medicines[index].medicineName.message}</p>
+                    <p className="text-red-600 text-sm mt-1">
+                      {errors.medicines[index].medicineName.message}
+                    </p>
                   )}
                 </div>
 
@@ -257,18 +266,25 @@ const NewPrescription = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Description<span className="text-red-500 ml-1">*</span>
                   </label>
-                  <input
-                    {...register(`medicines.${index}.description`)}
+                  <textarea
+                    {...register(`medicines.${index}.description`, {
+                      required: "Description is required",
+                    })}
                     placeholder="e.g., 1 tablet twice a day"
                     className={`block w-full px-3 py-2 border rounded-lg ${
-                      errors.medicines?.[index]?.description ? "border-red-500" : "border-gray-300"
+                      errors.medicines?.[index]?.description
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
+                    rows={2}
                   />
                   {errors.medicines?.[index]?.description && (
-                    <p className="text-red-600 text-sm mt-1">{errors.medicines[index].description.message}</p>
+                    <p className="text-red-600 text-sm mt-1">
+                      {errors.medicines[index].description.message}
+                    </p>
                   )}
                 </div>
-                
+
                 <div className="self-center pt-6">
                   <button
                     type="button"
@@ -285,7 +301,7 @@ const NewPrescription = () => {
         </div>
 
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-           <button
+          <button
             type="button"
             onClick={() => reset()}
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 mr-3"

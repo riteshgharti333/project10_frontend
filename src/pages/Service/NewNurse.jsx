@@ -1,21 +1,13 @@
-import React from "react";
 import { FaUserNurse, FaPhone, FaIdCard, FaHome } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import BackButton from "../../components/BackButton/BackButton";
-import { toast } from "sonner";
 import LoadingButton from "../../components/LoadingButton/LoadingButton";
+import { nurseSchema } from "@hospital/schemas";
+import { useNavigate } from "react-router-dom";
+import { useCreateNurse } from "../../feature/hooks/useNurse";
 
-const nurseSchema = z.object({
-  name: z.string().min(1, "Full name is required"),
-  mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
-  regNo: z.string().min(1, "Registration number is required"),
-  department: z.string().min(1, "Department is required"),
-  address: z.string().min(1, "Address is required"),
-  shift: z.enum(["Day", "Night", "Rotating"]),
-  status: z.enum(["Active", "Inactive", "On Leave"]).default("Active"),
-});
 
 const formFields = [
   {
@@ -25,23 +17,26 @@ const formFields = [
       {
         label: "Full Name",
         type: "text",
-        name: "name",
+        name: "fullName",
         placeholder: "Enter nurse's full name",
         icon: <FaUserNurse className="text-gray-400" />,
+        required: true,
       },
       {
         label: "Mobile Number",
         type: "tel",
-        name: "mobile",
+        name: "mobileNumber",
         placeholder: "Enter mobile number",
         icon: <FaPhone className="text-gray-400" />,
+        required: true,
       },
       {
         label: "Registration No",
         type: "text",
-        name: "regNo",
+        name: "registrationNo",
         placeholder: "Enter registration number",
         icon: <FaIdCard className="text-gray-400" />,
+        required: true,
       },
       {
         label: "Department",
@@ -49,6 +44,7 @@ const formFields = [
         name: "department",
         placeholder: "Select department",
         options: ["General", "ICU", "Pediatrics", "Emergency", "Surgery"],
+        required: true,
       },
     ],
   },
@@ -61,6 +57,7 @@ const formFields = [
         type: "textarea",
         name: "address",
         placeholder: "Enter full address",
+        required: true,
       },
       {
         label: "Shift",
@@ -68,6 +65,7 @@ const formFields = [
         name: "shift",
         placeholder: "Select shift",
         options: ["Day", "Night", "Rotating"],
+        required: true,
       },
       {
         label: "Status",
@@ -75,12 +73,14 @@ const formFields = [
         name: "status",
         placeholder: "Select status",
         options: ["Active", "Inactive", "On Leave"],
+        required: false,
       },
     ],
   },
 ];
 
 const NewNurse = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -89,9 +89,9 @@ const NewNurse = () => {
   } = useForm({
     resolver: zodResolver(nurseSchema),
     defaultValues: {
-      name: "",
-      mobile: "",
-      regNo: "",
+      fullName: "",
+      mobileNumber: "",
+      registrationNo: "",
       department: "",
       address: "",
       shift: "Day",
@@ -99,23 +99,12 @@ const NewNurse = () => {
     },
   });
 
-  const [isPending, setIsPending] = React.useState(false);
+  const { mutateAsync, isPending } = useCreateNurse();
 
   const onSubmit = async (data) => {
-    try {
-      setIsPending(true);
-      // Replace with your actual API call
-      // const response = await createNurse(data);
-      // Simulating API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      toast.success("Nurse created successfully");
-      reset();
-    } catch (error) {
-      console.error(error);
-      toast.error(error?.response?.data?.message || "Failed to create nurse");
-    } finally {
-      setIsPending(false);
+    const response = await mutateAsync(data);
+    if (response?.data?.success) {
+      navigate("/nurse/:id");
     }
   };
 
@@ -166,7 +155,9 @@ const NewNurse = () => {
                   >
                     <label className="block text-sm font-medium text-gray-700">
                       {field.label}
-                      <span className="text-red-500 ml-1">*</span>
+                      {field.required && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
                     </label>
 
                     {field.type === "select" ? (
@@ -178,7 +169,9 @@ const NewNurse = () => {
                           }`}
                           aria-invalid={error ? "true" : "false"}
                         >
-                          <option value="">{field.placeholder}</option>
+                          <option value="" disabled selected hidden>
+                            {field.placeholder}
+                          </option>
                           {field.options.map((option, i) => (
                             <option key={i} value={option}>
                               {option}

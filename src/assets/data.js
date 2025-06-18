@@ -51,7 +51,7 @@ const ledgerTitles = [
   },
   {
     title: "Lab/Diagnostics Ledger",
-    link: "ledger/lab-diagnostics-ledger",
+    link: "ledger/lab-ledger",
   },
   {
     title: "Cash Ledger",
@@ -67,7 +67,7 @@ const ledgerTitles = [
   },
   {
     title: "General Expense Ledger",
-    link: "ledger/general-expense-ledger",
+    link: "ledger/expense-ledger",
   },
 ];
 
@@ -185,7 +185,7 @@ export const sidebarData = [
       { title: "Product Category", link: "/product-category" },
       { title: "Add Item / Service", link: "/add-product" },
       { title: "View All Item / Service", link: "/all-products" },
-      { title: "Service Charges Update", link: "/service-charges-update" },
+      // { title: "Service Charges Update", link: "/service-charges-update" },
     ],
   },
   // {
@@ -246,9 +246,9 @@ export const sidebar2Data = [
     ],
   },
   {
-    title: "Payment Vouchar",
+    title: "Payment Voucher",
     icon: MdOutlinePayments,
-    link: "/payment-vouchars",
+    link: "/payment-vouchers",
   },
   {
     title: "User Module",
